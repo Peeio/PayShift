@@ -1,4 +1,4 @@
-<center># **negrita**</center>
+<p style="text-align: center;">PayShift</p>
 
 # 📅 Gestor de Turnos y Nómina
 
