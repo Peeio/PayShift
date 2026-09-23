@@ -2,7 +2,7 @@
 
 Una aplicación web intuitiva y ligera diseñada para la gestión integral de turnos de trabajo, control del rendimiento anual y cálculo personalizado de nóminas.
 
-### 🌟 Características principales
+## 🌟 Características principales
 
 * **Gestión de Turnos Personalizados:** Crea, edita y organiza tus turnos de trabajo según tus necesidades.
 * **Notas Diarias:** Añade anotaciones específicas en cualquier día del calendario para un seguimiento detallado.
