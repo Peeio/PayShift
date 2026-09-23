@@ -1,5 +1,3 @@
-<center>PayShift</center>
-
 # 📅 Gestor de Turnos y Nómina
 
 Una aplicación web intuitiva y ligera diseñada para la gestión integral de turnos de trabajo, control del rendimiento anual y cálculo personalizado de nóminas.
