@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Turnos & Nómina</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        /* SCROLLBARS CON MARGEN PARA NO TOCAR LOS BORDES SUPERIOR/INFERIOR */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+
+        #yearlyView::-webkit-scrollbar-track,
+        #monthlyView::-webkit-scrollbar-track {
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        html:not(.dark) ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+        }
+        html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+
+        html:not(.dark) body {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        
+        /* 1. PANEL IZQUIERDO MISMO COLOR AZUL EN MODO CLARO */
+        html:not(.dark) #sidebarPanel {
+            background-color: #e0f2fe;
+            border-color: #bae6fd;
+            box-shadow: 0 4px 12px -2px rgba(100, 116, 139, 0.08);
+        }
+
+        /* FONDO BLANCO SEMI-TRANSPARENTE PARA EL BANNER SUPERIOR DEL USUARIO EN MODO CLARO */
+        **html:not(.dark) #sidebarUserHeader {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-color: #bae6fd;
+        }
+
+        html.dark #sidebarPanel {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+
+        /* 8. PANELES CENTRALES Y DERECHOS SIN SUPERPOSICIÓN GLOBAL */
+        html:not(.dark) aside:not(#sidebarPanel),
+        html:not(.dark) #monthlyView,
+        html:not(.dark) #yearlyView,
+        html:not(.dark) .main-header-block {
+            background-color: #e0f2fe;
+            border-color: #bae6fd;
+            box-shadow: 0 4px 12px -2px rgba(100, 116, 139, 0.08);
+        }
+        
+        html:not(.dark) .aside {
+            background-color: #e0f2fe;
+            border-color: #bae6fd;
+        }
+
+        .aside {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+
+        html:not(.dark) .vs {
+            background-color: #ffffff;
+            border-color: #bae6fd;
+        }
+
+        .vs {
+            background-color: #020617;
+            border-color: #1E293B;
+        }
+
+        html:not(.dark) .text-white,
+        html:not(.dark) .text-slate-100,
+        html:not(.dark) .text-slate-200,
+        html:not(.dark) .text-slate-300 { color: #0f172a; }
+        html:not(.dark) .text-slate-400 { color: #334155; }
+        html:not(.dark) .text-slate-500 { color: #475569; }
+
+        html:not(.dark) #sideDayOfWeek { color: #01579b; }
+
+        .yearly-month-card {
+            box-sizing: border-box;
+            padding: 0.75rem;
+            margin: 0;
+            border-radius: 1rem;
+            width: 100%;
+        }
+
+        html:not(.dark) #yearly-month-card {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+        }
+
+	html:not(.dark) #yearlyStatsBox {
+		border: 1px solid #bae6fd;
+	}
+
+	html.dark #yearlyStatsBox {
+		border: 1px solid #1e293b;
+	}
+
+	html:not(.dark) #shiftBgBox {
+		border: 1px solid #bae6fd;
+	}
+
+        html.dark .yearly-month-card {
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid #1e293b;
+        }
+
+	html.not(.dark) .yearlyStatsBox {
+		border: 1px solid #bae6fd;
+	}
+
+        html:not(.dark) #yearlyGrid .text-slate-300 {
+            color: #0f172a;
+        }
+
+        html:not(.dark) #guardOverlay {
+            background-color: #d97706;
+            color: #ffffff;
+            border-color: #b45309;
+            font-weight: 800;
+        }
+
+        html:not(.dark) .btn-add-shift {
+            background-color: #1e293b;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+        html:not(.dark) .btn-guard-pack {
+            background-color: #4338ca;
+            color: #ffffff;
+            border-color: #3730a3;
+        }
+        html:not(.dark) .btn-clear-month {
+            background-color: #dc2626;
+            color: #ffffff;
+            border-color: #b91c1c;
+        }
+        html:not(.dark) #sideShiftBadge {
+            background-color: #ffffff;
+            color: #0f172a;
+            border: 1px solid #bae6fd;
+            font-weight: 800;
+        }
+        #dayNotesText {
+            field-sizing: content;
+            min-height: 80px;
+            max-height: 500px;
+            height: auto;
+            resize: none;
+        }
+        html:not(.dark) #dayNotesText {
+            background-color: #ffffff;
+            color: #0f172a;
+            border: 1.5px solid #bae6fd;
+            font-weight: 600;
+            field-sizing: content;
+            min-height: 80px;
+            max-height: 500px;
+            height: auto;
+        }
+        html:not(.dark) #dayNotesText::placeholder {
+            color: #64748b;
+        }
+        html:not(.dark) #payrollMonthLabel {
+            background-color: #1e40af;
+            color: #ffffff;
+            border-color: #1e3a8a;
+            font-weight: 700;
+        }
+
+        html:not(.dark) .app-version-badge {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
+        html:not(.dark) #dayModal > div,
+        html:not(.dark) #settingsModal > div,
+        html:not(.dark) #customShiftModal > div,
+        html:not(.dark) #addUserModal > div,
+        html:not(.dark) #confirmClearMonthModal > div,
+        html:not(.dark) #confirmDeleteShiftModal > div,
+        html:not(.dark) #customAlertModal > div,
+        html:not(.dark) #loginAlertModal > div {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            border-radius: 1.5rem;
+        }
+
+        html:not(.dark) select,
+        html:not(.dark) input[type="number"],
+        html:not(.dark) input[type="text"],
+        html:not(.dark) input[type="email"] {
+            background-color: #f8fafc;
+            color: #0f172a;
+            border-color: #cbd5e1;
+            border-radius: 0.75rem;
+        }
+
+        html:not(.dark) .calendar-day-cell {
+            background-color: #ffffff;
+            border-color: #bae6fd;
+            border-radius: 1rem;
+            padding: 0.375rem;
+        }
+        html:not(.dark) .calendar-day-cell.weekend-cell {
+            background-color: #f0f9ff;
+        }
+        html:not(.dark) .calendar-day-cell.festive-cell {
+            background-color: #ffe4e6;
+            border-color: #fecdd3;
+        }
+
+        html:not(.dark) .fondo-azul-claro {
+            background-color: #e0f2fe;
+        }
+
+        /* 4. BLOQUE COPIAS DE SEGURIDAD MODO CLARO */
+        html:not(.dark) #backupsList {
+            background-color: #f0f9ff;
+            border-color: #bae6fd;
+        }
+
+        /* 7. CONTRASTE MEJORADO EN BLOQUE NÓMINA EN MODO CLARO */
+        html:not(.dark) .payroll-box {
+            background-color: #ffffff;
+            border-color: #bae6fd;
+            border-radius: 1rem;
+        }
+        html:not(.dark) .payroll-box .payroll-label,
+        html:not(.dark) .payroll-box .payroll-value {
+            color: #1e293b;
+
+        }
+        html:not(.dark) .payroll-box .payroll-val {
+            color: #0f172a;
+            font-weight: 700;
+        }
+        html:not(.dark) .payroll-subtext {
+            color: #475569;
+        }
+
+        .btn-view-toggle {
+            border-radius: 0.5rem;
+            border-width: 1px;
+            box-sizing: border-box;
+        }
+
+        input[type="file"]::file-selector-button {
+            border-radius: 0.5rem;
+            margin-right: 0.5rem;
+            border: 1px solid #475569;
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: #334155;
+        }
+
+        html:not(.dark) input[type="file"]::file-selector-button {
+            border: 1px solid #cbd5e1;
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+        html:not(.dark) input[type="file"]::file-selector-button:hover {
+            background-color: #f1f5f9;
+        }
+
+        .select-none {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .shift-bg-container {
+            transition: all 0.5s ease;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .sidebar-bg-default { background: linear-gradient(180deg, #334155 0%, #1e293b 100%); }
+        .sidebar-bg-M { background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); }
+        .sidebar-bg-T { background: linear-gradient(180deg, #fb923c 0%, #c2410c 100%); }
+        .sidebar-bg-N { background: linear-gradient(180deg, #312e81 0%, #0f172a 100%); }
+
+        .day-today-subtle {
+            background-color: #2563eb;
+            color: #ffffff;
+            border-radius: 9999px;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+        
+        .day-selected-range {
+            outline: 2px solid #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .guard-border-subtle {
+            border: 2px solid #f59e0b;
+        }
+
+        /* ANIMACIÓN Y DESLIZAMIENTO DEL PANEL DE NÓMINA */
+	/* 1. Definimos las animaciones/transiciones del panel */
+		.payroll-panel-container {
+    			transition: transform 0.3s ease-in-out, 
+                	max-width 0.3s ease-in-out, 
+	                max-height 0.3s ease-in-out, 
+        	        opacity 0.3s ease-in-out, 
+                	margin 0.3s ease-in-out;
+		}
+
+	/* 2. Base común para ocultar */
+		.payroll-hidden {
+		    opacity: 0;
+		    pointer-events: none;
+		    overflow: hidden;
+		}	
+
+	/* 3. Colapso horizontal en Desktop */
+		@media (min-width: 1024px) {
+		    .payroll-hidden {
+		        transform: translateX(105%);
+		        max-width: 0px !important;
+		        margin-left: -0.75rem;
+		    }
+		}
+
+	/* 4. Colapso vertical en Móvil/Tablet */
+		@media (max-width: 1023px) {
+		    .payroll-hidden {
+		        transform: translateY(105%);
+		        max-height: 0px !important;
+		        margin-top: -0.75rem;
+		    }
+		}
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen lg:h-screen flex flex-col p-2 md:p-3 overflow-x-hidden select-none">
+
+    <!-- Pantalla de Login -->
+    <div id="authScreen" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl">
+            <div class="text-center space-y-2">
+                <div class="inline-flex p-3 bg-blue-600/20 text-blue-400 rounded-2xl mb-2">
+                    <i data-lucide="calendar" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white">Control de Turnos</h2>
+                <p class="text-xs text-slate-400">Introduce tu usuario para acceder</p>
+            </div>
+
+            <div id="loginBox" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Correo Electrónico / Usuario</label>
+                    <input type="text" id="authEmail" onkeyup="if(event.key === 'Enter') handleLogin()" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="usuario@ejemplo.com">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm transition shadow-lg shadow-blue-600/30">
+                    Acceder a la Aplicación
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Principal -->
+    <div id="appLayout" class="hidden flex-1 flex flex-col lg:flex-row gap-3 h-full items-stretch overflow-hidden">
+
+        <!-- PANEL IZQUIERDO -->
+        <aside id="sidebarPanel" class="aside w-full lg:w-3/12 bg-slate-800 border border-slate-700 rounded-3xl p-3.5 flex flex-col justify-between relative overflow-hidden transition-all duration-500 shadow-xl h-full flex-shrink-0">
+            
+            <div id="sidebarUserHeader" class="relative z-10 flex items-center justify-between border-b border-slate-700/80 pb-2 mb-1 p-2 backdrop-blur-sm transition-colors">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white overflow-hidden border border-slate-700 shadow-sm" id="userAvatarContainer">
+                        <span id="userAvatar">U</span>
+                    </div>
+                    <div>
+                        <div id="sideUserName" class="text-xs font-bold text-slate-100">Usuario</div>
+                        <div id="sideUserMail" class="text-[10px] text-slate-400">mail</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="toggleDarkMode()" class="p-1 hover:bg-slate-700/60 rounded-lg text-amber-400 transition" title="Alternar Modo Oscuro/Claro">
+                        <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="openAddUserModal()" class="p-1 hover:bg-slate-700/60 rounded-lg text-slate-300 transition" title="Añadir Usuario">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="openSettingsModal()" class="p-1 hover:bg-slate-700/60 rounded-lg text-slate-300 transition" title="Ajustes">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="handleLogout()" class="p-1 hover:bg-rose-500/20 text-rose-400 rounded-lg transition" title="Cerrar Sesión">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="shiftBgBox" class="flex-1 my-2 rounded-2xl border p-3.5 relative overflow-hidden flex flex-col justify-between gap-3 shift-bg-container sidebar-bg-default">
+                
+                <div class="absolute inset-0 z-0"></div>
+
+                <div id="guardOverlay" class="hidden absolute top-2 right-2 bg-amber-500 text-slate-950 px-2 py-0.5 rounded-md text-[10px] font-extrabold shadow-md flex items-center gap-1 z-20">
+                    <i data-lucide="shield-alert" class="w-3 h-3"></i> GUARDIA
+                </div>
+
+                <div class="relative z-10 space-y-2 w-full flex-1 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-baseline gap-2 justify-start pl-1 text-left">
+                            <span id="sideDayNum" class="text-2xl font-black tracking-tight text-white drop-shadow-md">04</span>
+                            <span id="sideDayOfWeek" class="text-lg font-extrabold tracking-wider text-blue-200 uppercase drop-shadow-md">SEGUNDA-FEIRA</span>
+                        </div>
+                        <div id="sideMonthName" class="text-xs font-bold text-slate-200 drop-shadow mt-0.5 text-left pl-1">Mayo 2026</div>
+                    </div>
+
+                    <div>
+                        <div class="text-[10px] text-slate-300 font-bold tracking-wider mb-1 drop-shadow pl-1">TURNO ASIGNADO</div>
+                        <div id="sideShiftBadge" class="inline-block px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-900/90 text-white backdrop-blur-md border border-slate-700 shadow">
+                            Sin Turno
+                        </div>
+                    </div>
+
+                    <div class="flex-1 flex flex-col my-auto space-y-1 pt-1 min-h-[40px]">
+                        <div class="flex justify-between items-center px-1">
+                            <span class="text-[10px] text-slate-300 font-bold tracking-wider drop-shadow">NOTAS DEL DÍA</span>
+                            <span id="notesSavedIndicator" class="text-[10px] text-emerald-400 font-bold hidden">Guardado ✓</span>
+                        </div>
+                        <textarea id="dayNotesText" oninput="saveDayNotes()" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-400 resize-none backdrop-blur-md font-medium" placeholder="Escribe tus notas aquí..."></textarea>
+                    </div>
+                </div>
+
+                <div id="shiftIllustration" class="relative z-10 flex justify-center items-center"></div>
+            </div>
+
+            <div class="pt-1 text-center text-[10px] text-slate-400 font-medium border-t border-slate-700/80 flex justify-between items-center px-1 sidebar-footer">
+                <span id="copyrightYearText">© Peio Oraa 2026</span>
+                <span class="app-version-badge bg-slate-800/60 text-slate-300 border border-slate-700/50 px-1.5 py-0.5 rounded text-[9px] font-bold">v1.4.3</span>
+            </div>
+        </aside>
+
+        <!-- PANEL CENTRAL (Crece y ocupa todo el espacio cuando la nómina está oculta) -->
+        <main class="flex-1 flex flex-col gap-2 h-full overflow-hidden transition-all duration-300">
+            
+            <div class="main-header-block bg-slate-900 border border-slate-800 p-2.5 rounded-2xl flex flex-wrap items-center justify-between gap-2 shadow-sm flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <button onclick="changeMonth(-1)" class="p-1 hover:bg-slate-800/60 rounded-lg text-slate-400 hover:text-white transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <h2 id="currentMonthYear" class="text-sm font-bold text-white min-w-[130px] text-center">Mayo 2026</h2>
+                    <button onclick="changeMonth(1)" class="p-1 hover:bg-slate-800/60 rounded-lg text-slate-400 hover:text-white transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div class="vs p-1 rounded-xl flex gap-1 border" id="viewToggleContainer">
+                        <button id="btnViewMonth" onclick="switchView('month')" class="btn-view-toggle px-3 py-1 text-xs font-bold rounded-lg transition-all">Mensual</button>
+                        <button id="btnViewYear" onclick="switchView('year')" class="btn-view-toggle px-3 py-1 text-xs font-bold rounded-lg transition-all">Anual</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <button onclick="openCustomShiftModal()" class="btn-add-shift bg-slate-800 hover:bg-slate-700/80 text-white border border-slate-600 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm">
+                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Turnos
+                    </button>
+                    <button id="btnGuardPack" onclick="toggleGuardPlacementMode()" class="btn-guard-pack bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm">
+                        <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Pack Guardia
+                    </button>
+                    <button onclick="openConfirmClearMonthModal()" class="btn-clear-month bg-rose-600 hover:bg-rose-500 text-white border border-rose-500 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Borrar Mes
+                    </button>
+                    <!-- BOTÓN PARA MOSTRAR/OCULTAR LA NÓMINA -->
+                    <button id="btnTogglePayroll" onclick="togglePayrollPanel()" class="bg-blue-600 hover:bg-blue-500 text-white border border-blue-500 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm" title="Ocultar/Mostrar Nómina">
+                        <i data-lucide="panel-right-close" id="iconTogglePayroll" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="guardModeAlert" class="hidden bg-indigo-600 text-white p-2 rounded-xl text-xs flex justify-between items-center px-4 animate-pulse flex-shrink-0">
+                <span>Haz clic en el día del calendario donde quieres iniciar los 12 días de guardia.</span>
+                <button onclick="toggleGuardPlacementMode()" class="underline font-bold text-[10px]">Cancelar</button>
+            </div>
+
+            <div id="rangeActionBar" class="hidden bg-blue-900/90 border border-blue-500/40 text-white p-2 rounded-xl flex items-center justify-between text-xs shadow-lg flex-shrink-0">
+                <span><strong id="rangeCount">0</strong> días seleccionados</span>
+                <div class="flex items-center gap-2">
+                    <select id="rangeShiftSelect" class="bg-slate-900 text-white border border-slate-700 rounded-lg px-2 py-1 text-xs">
+                        <option value="">Borrar</option>
+                        <option value="M">Mañana (M)</option>
+                        <option value="T">Tarde (T)</option>
+                        <option value="N">Noche (N)</option>
+                        <option value="G">Guardia (G)</option>
+                        <option value="MG">Mañana Guardia (MG)</option>
+                        <option value="NG">Noche Guardia (NG)</option>
+                        <option value="E">ERTE (E)</option>
+                        <option value="B">Baja (B)</option>
+                        <option value="LR">Lic. Retribuida (LR)</option>
+                        <option value="F">Festivo (F)</option>
+                        <option value="AC">Ajuste Calendario (AC)</option>
+                    </select>
+                    <button onclick="applyRangeShift()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg font-bold transition">Aplicar</button>
+                    <button onclick="clearRangeSelection()" class="text-slate-300 hover:text-white">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Vista mensual -->
+            <div id="monthlyView" class="aside border border-slate-800 p-3 rounded-3xl space-y-2 flex-1 flex flex-col justify-start shadow-sm overflow-y-auto">
+                <div class="grid grid-cols-7 text-center font-bold text-slate-500 text-[10px] py-0.5 border-b border-slate-800">
+                    <span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span><span class="text-rose-400 font-extrabold">SÁB</span><span class="text-rose-400 font-extrabold">DOM</span>
+                </div>
+                <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+            </div>
+
+            <!-- Vista Anual -->
+            <div id="yearlyView" class="hidden bg-slate-900 border border-slate-800 p-3.5 rounded-3xl space-y-3 flex-1 overflow-y-auto">
+                <div class="text-xs font-bold text-slate-300">Calendario Global <span id="yearlyYearLabel">2026</span></div>
+                
+                <!-- BLOQUE DE ESTADÍSTICAS ANUALES DE TURNOS -->
+                <div id="yearlyStatsBox" class="border rounded-2xl p-3 space-y-2">
+                    <div class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5 border-b border-slate-800/80 pb-1.5">
+                        <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-blue-400"></i> Estadísticas de Turnos del Año <span id="statsYearLabel">2026</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        <div class="space-y-1">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trabajados hasta la fecha (Hoy)</div>
+                            <div id="statsWorkedSoFar" class="flex flex-wrap gap-1.5 pt-0.5"></div>
+                        </div>
+                        <div class="space-y-1 border-t md:border-t-0 md:border-l border-slate-800/80 pt-2 md:pt-0 md:pl-3">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proyección Total Año (Asignados)</div>
+                            <div id="statsProjectedYear" class="flex flex-wrap gap-1.5 pt-0.5"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="yearlyGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5"></div>
+            </div>
+        </main>
+
+        <!-- PANEL DERECHO (Nómina Deslizable y Ocultable) -->
+        <aside id="payrollPanel" class="aside payroll-panel-container w-full lg:w-3/12 border border-slate-800 rounded-3xl p-3.5 flex flex-col justify-between space-y-3 shadow-xl h-full overflow-hidden flex-shrink-0">
+            <div class="space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                    <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i data-lucide="calculator" class="w-4 h-4 text-blue-400"></i> Nómina del Mes
+                    </h3>
+                    <span id="payrollMonthLabel" class="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded-full border border-blue-500 font-bold shadow-sm">Mayo 2026</span>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <div class="text-[9px] font-bold text-slate-500 tracking-wider">DEVENGOS</div>
+
+                    <div class="payroll-box bg-slate-950 p-2 rounded-xl border border-slate-800/80 space-y-0.5">
+                        <div class="flex justify-between font-semibold payroll-label text-slate-200 text-[11px]">
+                            <span>Base + Complementos:</span>
+                            <span id="valBaseSalaryTotal" class="payroll-val">2.189,54 €</span>
+                        </div>
+                        <div class="text-[8px] text-slate-500 font-mono font-semibold payroll-subtext" id="valBaseSalaryBreakdown">
+                            (1.961,12€ + 114,13€ + 114,29€)
+                        </div>
+                    </div>
+
+                    <div class="payroll-box bg-slate-950 p-2 rounded-xl border border-slate-800/80 flex justify-between font-semibold payroll-label text-slate-200 text-[11px]">
+                        <span>Prorrata Pagas Extras:</span>
+                        <span id="valProrrataExtra" class="text-amber-500 font-bold">365,92 €</span>
+                    </div>
+
+                    <div class="flex justify-between px-1 payroll-label text-slate-300 font-semibold text-[11px]">
+                        <span>Nocturnidad (<span id="countNights">0</span>h):</span>
+                        <span id="valNights" class="payroll-val font-semibold text-white">0,00 €</span>
+                    </div>
+
+                    <div class="flex justify-between px-1 payroll-label text-slate-300 text-[11px]">
+                        <span>Guardias:</span>
+                        <span id="valGuardias" class="payroll-val font-semibold text-white">0,00 €</span>
+                    </div>
+
+                    <div class="payroll-box bg-slate-950 p-1.5 rounded-xl border border-slate-800/80 space-y-0.5 text-[10px]">
+                        <div class="flex justify-between payroll-label font-semibold text-slate-400"><span>Horas Extras MG (<span id="countMgHours">0</span>h):</span> <span id="valExtrasMG" class="payroll-val font-semibold text-slate-200">0,00 €</span></div>
+                        <div class="flex justify-between payroll-label font-semibold text-slate-400"><span>Horas Extras NG (<span id="countNgHours">0</span>h):</span> <span id="valExtrasNG" class="payroll-val font-semibold text-slate-200">0,00 €</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payroll-box bg-slate-950 p-2.5 rounded-2xl border border-slate-800 space-y-1.5 text-xs">
+                <div class="text-[9px] font-bold text-slate-500 tracking-wider">DEDUCCIONES</div>
+                <div class="flex justify-between payroll-label text-slate-400 text-[10px]">
+                    <span class="flex flex-col font-bold">
+                        <span>Bruto Devengado:</span>
+                        <span class="text-[8px] text-slate-500 font-medium payroll-subtext">(incluye prorrateo pagas extras)</span>
+                    </span> 
+                    <span id="valBruto" class="payroll-val font-bold text-slate-200">0,00 €</span>
+                </div>
+                <div class="flex justify-between text-rose-400 font-semibold text-[10px]"><span>Seg. Social (4.85%):</span> <span id="valSS" class="font-semibold">0,00 €</span></div>
+                <div class="flex justify-between text-rose-400 font-semibold text-[10px]"><span>Desempleo (1.65%):</span> <span id="valDesempleo" class="font-semibold">0,00 €</span></div>
+                <div class="flex justify-between text-rose-400 font-semibold text-[10px]"><span>IRPF (18%):</span> <span id="valIRPF" class="font-semibold">0,00 €</span></div>
+
+                <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center font-bold text-emerald-400 text-xs">
+                    <span>LÍQUIDO NETO:</span>
+                    <span id="valNeto" class="text-sm">0,00 €</span>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- MODALES -->
+    <div id="loginAlertModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs text-center">
+            <div class="inline-flex p-3 bg-amber-500/20 text-amber-400 rounded-2xl">
+                <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            </div>
+            <h4 class="font-bold text-white text-base">Campo Requerido</h4>
+            <p class="text-slate-400 text-xs">Por favor, introduce tu correo o nombre de usuario para acceder.</p>
+            <button onclick="closeLoginAlertModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-blue-600/30">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <div id="confirmClearMonthModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs text-center">
+            <div class="inline-flex p-3 bg-rose-500/20 text-rose-400 rounded-2xl">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <h4 class="font-bold text-white text-base">¿Borrar mes actual?</h4>
+            <p class="text-slate-400 text-xs">Se eliminarán todos los turnos asignados para el mes seleccionado actualmente.</p>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeConfirmClearMonthModal()" class="w-1/2 py-2.5 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 transition font-semibold">Cancelar</button>
+                <button onclick="confirmClearCurrentMonth()" class="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition shadow-lg shadow-rose-600/30">Sí, Borrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Confirmar Eliminación de Turno -->
+    <div id="confirmDeleteShiftModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[60]">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs text-center">
+            <div class="inline-flex p-3 bg-rose-500/20 text-rose-400 rounded-2xl">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
+            </div>
+            <h4 class="font-bold text-white text-base">¿Eliminar turno?</h4>
+            <p id="confirmDeleteShiftMessage" class="text-slate-400 text-xs">¿Estás seguro de que deseas eliminar este turno?</p>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeConfirmDeleteShiftModal()" class="w-1/2 py-2.5 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 transition font-semibold">Cancelar</button>
+                <button id="btnConfirmDeleteShift" onclick="" class="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition shadow-lg shadow-rose-600/30">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Alerta Genérico estilo App -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[60]">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs text-center">
+            <div class="inline-flex p-3 bg-amber-500/20 text-amber-400 rounded-2xl">
+                <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            </div>
+            <h4 id="customAlertTitle" class="font-bold text-white text-base">Atención</h4>
+            <p id="customAlertMessage" class="text-slate-400 text-xs"></p>
+            <button onclick="closeCustomAlertModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-blue-600/30">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Ajustes -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto text-xs">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h4 class="font-bold text-white text-sm">Configuración y Ajustes</h4>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="space-y-2">
+                <div class="font-bold text-slate-400">FOTO DE PERFIL / AVATAR</div>
+                <div class="flex items-center gap-3">
+                    <div id="avatarPreview" class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-lg overflow-hidden border border-slate-700 flex-shrink-0">
+                        U
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <input type="file" id="userAvatarUpload" onchange="previewUserAvatar(this)" accept="image/*" class="text-slate-400 text-[10px] w-full cursor-pointer box-border">
+                        <button type="button" onclick="removeAvatarImage()" class="text-[10px] text-rose-400 hover:underline flex items-center gap-1 font-semibold">
+                            <i data-lucide="trash" class="w-3 h-3"></i> Quitar Foto
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <div class="space-y-3">
+                <div class="font-bold text-slate-400">PARÁMETROS SALARIALES</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Sueldo Base (€):</label>
+                        <input type="number" id="cfgBaseSalary" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Plus Carencia (€):</label>
+                        <input type="number" id="cfgCarencia" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Plus Función (€):</label>
+                        <input type="number" id="cfgFuncion" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">% Retención IRPF:</label>
+                        <input type="number" id="cfgIrpf" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <div class="space-y-3">
+                <div class="font-bold text-slate-400">IMÁGENES DE FONDO DE TURNO</div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex-1">
+                            <label class="block text-slate-400 mb-0.5">Fondo Turno Mañana (M):</label>
+                            <input type="file" id="imgUpload_M" accept="image/*" class="w-full text-slate-400 text-[10px] cursor-pointer box-border">
+                        </div>
+                        <button type="button" onclick="removeShiftImage('M')" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Quitar imagen">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex-1">
+                            <label class="block text-slate-400 mb-0.5">Fondo Turno Tarde (T):</label>
+                            <input type="file" id="imgUpload_T" accept="image/*" class="w-full text-slate-400 text-[10px] cursor-pointer box-border">
+                        </div>
+                        <button type="button" onclick="removeShiftImage('T')" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Quitar imagen">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex-1">
+                            <label class="block text-slate-400 mb-0.5">Fondo Turno Noche (N):</label>
+                            <input type="file" id="imgUpload_N" accept="image/*" class="w-full text-slate-400 text-[10px] cursor-pointer box-border">
+                        </div>
+                        <button type="button" onclick="removeShiftImage('N')" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Quitar imagen">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <div class="space-y-3">
+                <div class="font-bold text-slate-400">COPIAS DE SEGURIDAD</div>
+                <div id="backupsList" class="space-y-1.5 max-h-32 overflow-y-auto p-2 bg-slate-950 rounded-xl border border-slate-800"></div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="closeSettingsModal()" class="w-1/2 py-2.5 border border-slate-700 rounded-xl text-slate-400 hover:bg-slate-800 transition font-semibold">Cancelar</button>
+                <button type="button" onclick="saveSettings()" class="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-blue-600/30">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customShiftModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-xs">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h4 class="font-bold text-white">Gestión de Turnos</h4>
+                <button onclick="closeCustomShiftModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <!-- SECCIÓN: EDITAR / BORRAR TURNOS EXISTENTES -->
+            <div class="space-y-2">
+                <label class="block text-slate-400 font-bold">Modificar / Borrar Turnos Existentes:</label>
+                <div id="existingShiftsColorList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <!-- SECCIÓN: CREAR NUEVO TURNO -->
+            <div class="space-y-3">
+                <label class="block text-slate-400 font-bold">Agregar Nuevo Turno:</label>
+                <div>
+                    <label class="block text-slate-400 mb-1">Código del Turno (Título):</label>
+                    <input type="text" id="newShiftCode" maxlength="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white uppercase font-bold" placeholder="M1">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Nombre Completo del Turno:</label>
+                    <input type="text" id="newShiftName" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium" placeholder="M1 - Mañana Especial">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Fondo:</label>
+                        <input type="color" id="newShiftBg" value="#3b82f6" class="w-full h-8 bg-transparent rounded cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Borde:</label>
+                        <input type="color" id="newShiftBd" value="#1d4ed8" class="w-full h-8 bg-transparent rounded cursor-pointer">
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeCustomShiftModal()" class="w-1/2 py-2 border border-slate-700 rounded-xl text-slate-400">Cancelar</button>
+                <button onclick="confirmAddShift()" class="w-1/2 py-2 bg-blue-600 text-white rounded-xl font-bold">Crear Turno</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addUserModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h4 class="font-bold text-white">Nuevo Usuario</h4>
+                <button onclick="closeAddUserModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-slate-400">Nombre:</label>
+                <input type="text" id="newUserName" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white">
+                <label class="block text-slate-400">Correo Electrónico:</label>
+                <input type="email" id="newUserMail" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white">
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeAddUserModal()" class="w-1/2 py-2 border border-slate-700 rounded-xl text-slate-400">Cancelar</button>
+                <button onclick="confirmAddUser()" class="w-1/2 py-2 bg-blue-600 text-white rounded-xl font-bold">Crear</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dayModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs">
+            <h4 id="modalTitle" class="font-bold text-center border-b border-slate-800 pb-2 text-white">Editar Día</h4>
+            <div class="space-y-2">
+                <label class="block text-slate-400 font-medium">Turno Asignado:</label>
+                <select id="modalShift" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer"></select>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-slate-400 font-medium">Tipo de Día:</label>
+                <select id="modalDayType" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer">
+                    <option value="auto">Automático</option>
+                    <option value="festivo">Festivo Oficial</option>
+                    <option value="especial">Festivo Especial</option>
+                </select>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="clearSingleDay()" class="w-1/3 py-2.5 bg-rose-500/20 text-rose-400 rounded-xl font-semibold hover:bg-rose-500/30 transition text-center">Borrar</button>
+                <button type="button" onclick="closeModal()" class="w-1/3 py-2.5 border border-slate-700 rounded-xl text-slate-400 hover:bg-slate-800 transition text-center">Cancelar</button>
+                <button type="button" onclick="saveModal()" class="w-1/3 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 text-center">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CURRENT_APP_VERSION = "v1.4.3";
+        let currentDate = new Date(2026, 8, 8);
+        let selectedDayKey = '2026-09-08';
+        let currentView = 'month';
+        let currentUserEmail = null;
+        let isGuardPlacementMode = false;
+        let isDarkMode = true;
+        let isPayrollVisible = true;
+
+        let selectionAnchor = null;
+        let selectedKeys = [];
+
+        let tempAvatarData = null;
+        let deletedAvatar = false;
+        let deletedShiftImages = {};
+
+        let appData = JSON.parse(localStorage.getItem('appData_v6') || '{}');
+        let backupsHistory = JSON.parse(localStorage.getItem('appBackupsHistory') || '[]');
+
+        let shiftFullNames = JSON.parse(localStorage.getItem('appShiftNames') || 'null') || {
+            M: "M - Mañana",
+            T: "T - Tarde",
+            N: "N - Noche",
+            G: "G - Guardia",
+            MG: "MG - Mañana Guardia",
+            NG: "NG - Noche Guardia",
+            E: "E - ERTE",
+            B: "B - Baja",
+            LR: "LR - Licencia Retribuida",
+            F: "F - Festivo",
+            AC: "AC - Ajuste Calendario"
+        };
+
+        function saveShiftFullNames() {
+            localStorage.setItem('appShiftNames', JSON.stringify(shiftFullNames));
+        }
+
+        let defaultColors = {
+            M: { bg: '#38bdf8', text: '#000000', border: '#0284c7' },
+            T: { bg: '#fb923c', text: '#000000', border: '#f97316' },
+            N: { bg: '#4338ca', text: '#ffffff', border: '#3730a3' },
+            G: { bg: '#f59e0b', text: '#ffffff', border: '#d97706' },
+            MG: { bg: '#38bdf8', text: '#000000', border: '#f59e0b' },
+            NG: { bg: '#4338ca', text: '#ffffff', border: '#f59e0b' },
+            E: { bg: '#6b7280', text: '#ffffff', border: '#4b5563' },
+            B: { bg: '#a855f7', text: '#ffffff', border: '#9333ea' },
+            LR: { bg: '#10b981', text: '#ffffff', border: '#059669' },
+            F: { bg: '#ef4444', text: '#ffffff', border: '#dc2626' },
+            AC: { bg: '#14b8a6', text: '#ffffff', border: '#0d9488' }
+        };
+
+        const HORA_EXTRA_MG = 9.069115;
+        const HORA_EXTRA_NG = 13.603673;
+        const GUARDIA_DISPO = { laborable: 19.67, finde: 39.32, festivo: 78.64, especial: 131.07 };
+        const GUARDIA_INTERVENCION = { 1: 52.35, 2: 104.71, 3: 157.06, 4: 209.41, 5: 261.77, 6: 314.12 };
+
+        function init() {
+            createAutoBackup(`Inicio de sesión (${CURRENT_APP_VERSION})`);
+            
+            const yearElem = document.getElementById('copyrightYearText');
+            if (yearElem) {
+                yearElem.innerText = `© Peio Oraa ${new Date().getFullYear()}`;
+            }
+
+            const savedUser = localStorage.getItem('activeUserSession');
+            if (savedUser && appData[savedUser]) {
+                currentUserEmail = savedUser;
+                showAppLayout();
+            } else {
+                document.getElementById('authScreen').classList.remove('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' || event.key === 'Esc') {
+                closeModal();
+                closeSettingsModal();
+                closeCustomShiftModal();
+                closeAddUserModal();
+                closeConfirmClearMonthModal();
+                closeConfirmDeleteShiftModal();
+                closeCustomAlertModal();
+                closeLoginAlertModal();
+            }
+        });
+
+        function handleLogin() {
+            const email = document.getElementById('authEmail').value.toLowerCase().trim();
+            if (!email) {
+                openLoginAlertModal();
+                return;
+            }
+            if (!appData[email]) {
+                appData[email] = createNewUserObj(email.split('@')[0], email);
+            }
+            currentUserEmail = email;
+            localStorage.setItem('activeUserSession', currentUserEmail);
+            saveData();
+            showAppLayout();
+        }
+
+        function openLoginAlertModal() { document.getElementById('loginAlertModal').classList.remove('hidden'); }
+        function closeLoginAlertModal() { document.getElementById('loginAlertModal').classList.add('hidden'); }
+
+        function openCustomAlertModal(title, message) {
+            document.getElementById('customAlertTitle').innerText = title || "Atención";
+            document.getElementById('customAlertMessage').innerText = message || "";
+            document.getElementById('customAlertModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+        function closeCustomAlertModal() {
+            document.getElementById('customAlertModal').classList.add('hidden');
+        }
+
+        function openConfirmDeleteShiftModal(code) {
+            document.getElementById('confirmDeleteShiftMessage').innerText = `¿Estás seguro de que deseas eliminar el turno ${code}?`;
+            const btn = document.getElementById('btnConfirmDeleteShift');
+            btn.onclick = function() {
+                executeDeleteShift(code);
+                closeConfirmDeleteShiftModal();
+            };
+            document.getElementById('confirmDeleteShiftModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+        function closeConfirmDeleteShiftModal() {
+            document.getElementById('confirmDeleteShiftModal').classList.add('hidden');
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('activeUserSession');
+            location.reload();
+        }
+
+        function createNewUserObj(name, email) {
+            return {
+                name: name,
+                email: email,
+                avatar: null,
+                shifts: {},
+                notes: {},
+                customImages: {},
+                colors: JSON.parse(JSON.stringify(defaultColors)),
+                config: { baseSalary: 1961.12, carencia: 114.13, funcion: 114.29, nightRate: 3.616962, irpf: 18 }
+            };
+        }
+
+        function getUser() {
+            if (!appData[currentUserEmail]) {
+                appData[currentUserEmail] = createNewUserObj('Usuario', currentUserEmail);
+            }
+            // Asegurar que turnos nuevos F y AC existan en usuarios antiguos
+            if (!appData[currentUserEmail].colors) {
+                appData[currentUserEmail].colors = JSON.parse(JSON.stringify(defaultColors));
+            } else {
+                if (!appData[currentUserEmail].colors.F) appData[currentUserEmail].colors.F = defaultColors.F;
+                if (!appData[currentUserEmail].colors.AC) appData[currentUserEmail].colors.AC = defaultColors.AC;
+            }
+            return appData[currentUserEmail];
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('appData_v6', JSON.stringify(appData));
+            } catch (e) {
+                console.warn("Error de cuota de localStorage. Intentando liberar espacio de backups antiguos...", e);
+                if (backupsHistory.length > 2) {
+                    backupsHistory = backupsHistory.slice(0, 2);
+                    localStorage.setItem('appBackupsHistory', JSON.stringify(backupsHistory));
+                }
+                try {
+                    localStorage.setItem('appData_v6', JSON.stringify(appData));
+                } catch (err) {
+                    openCustomAlertModal("Almacenamiento Lleno", "El almacenamiento local está lleno. Por favor quita alguna imagen de fondo para liberar espacio.");
+                }
+            }
+        }
+
+        function createAutoBackup(reason) {
+            try {
+                const backup = {
+                    version: CURRENT_APP_VERSION,
+                    timestamp: new Date().toLocaleString(),
+                    reason: reason,
+                    data: JSON.stringify(appData)
+                };
+                backupsHistory.unshift(backup);
+                if (backupsHistory.length > 5) backupsHistory = backupsHistory.slice(0, 5);
+                localStorage.setItem('appBackupsHistory', JSON.stringify(backupsHistory));
+            } catch (e) {
+                console.warn("No se pudo crear backup secundario por espacio.", e);
+            }
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (isDarkMode) {
+                html.classList.add('dark');
+                icon.setAttribute('data-lucide', 'sun');
+            } else {
+                html.classList.remove('dark');
+                icon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+            switchView(currentView);
+            if (currentView === 'year') {
+                renderYearlyView();
+            }
+        }
+
+        /* ALTERNAR OCULTAR/MOSTRAR PANEL DE NÓMINA CON ANIMACIÓN DE DESLIZAMIENTO */
+        function togglePayrollPanel() {
+            isPayrollVisible = !isPayrollVisible;
+            const payroll = document.getElementById('payrollPanel');
+            const icon = document.getElementById('iconTogglePayroll');
+            const btn = document.getElementById('btnTogglePayroll');
+
+            if (isPayrollVisible) {
+                payroll.classList.remove('payroll-hidden');
+                icon.setAttribute('data-lucide', 'panel-right-close');
+                btn.title = "Ocultar Nómina";
+            } else {
+                payroll.classList.add('payroll-hidden');
+                icon.setAttribute('data-lucide', 'panel-right-open');
+                btn.title = "Mostrar Nómina";
+            }
+            lucide.createIcons();
+        }
+
+        function showAppLayout() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('appLayout').classList.remove('hidden');
+            const u = getUser();
+            document.getElementById('sideUserName').innerText = u.name;
+            document.getElementById('sideUserMail').innerText = u.email;
+            
+            updateAvatarUI();
+            renderCalendar();
+            updateSidebar();
+            switchView(currentView);
+        }
+
+        function updateAvatarUI() {
+            const u = getUser();
+            const container = document.getElementById('userAvatarContainer');
+            if (container) {
+                if (u.avatar) {
+                    container.innerHTML = `<img src="${u.avatar}" class="w-full h-full object-cover rounded-full">`;
+                } else {
+                    const letter = (u.name && u.name.length > 0) ? u.name.charAt(0).toUpperCase() : 'U';
+                    container.innerHTML = `<span id="userAvatar">${letter}</span>`;
+                }
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const btnMonth = document.getElementById('btnViewMonth');
+            const btnYear = document.getElementById('btnViewYear');
+
+            const activeClasses = isDarkMode
+                ? "bg-blue-600 text-white border-blue-500 shadow-sm font-bold"
+                : "bg-blue-600 text-white border-blue-600 shadow-sm font-bold";
+
+            const inactiveClasses = isDarkMode
+                ? "text-slate-400 hover:text-white border-transparent bg-transparent"
+                : "text-slate-600 hover:text-slate-900 border-transparent bg-transparent";
+
+            if (view === 'month') {
+                document.getElementById('monthlyView').classList.remove('hidden');
+                document.getElementById('yearlyView').classList.add('hidden');
+                btnMonth.className = `btn-view-toggle px-3 py-1 text-xs rounded-lg transition-all ${activeClasses}`;
+                btnYear.className = `btn-view-toggle px-3 py-1 text-xs rounded-lg transition-all ${inactiveClasses}`;
+            } else {
+                document.getElementById('monthlyView').classList.add('hidden');
+                document.getElementById('yearlyView').classList.remove('hidden');
+                btnMonth.className = `btn-view-toggle px-3 py-1 text-xs rounded-lg transition-all ${inactiveClasses}`;
+                btnYear.className = `btn-view-toggle px-3 py-1 text-xs rounded-lg transition-all ${activeClasses}`;
+                renderYearlyView();
+            }
+        }
+
+        function changeMonth(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            clearRangeSelection();
+            renderCalendar();
+            if (currentView === 'year') {
+                renderYearlyView();
+            }
+        }
+
+        function renderCalendar() {
+            const u = getUser();
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            
+            document.getElementById('currentMonthYear').innerText = `${monthNames[month]} ${year}`;
+            document.getElementById('payrollMonthLabel').innerText = `${monthNames[month]} ${year}`;
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const firstDay = new Date(year, month, 1);
+            let startingDay = firstDay.getDay() - 1; 
+            if (startingDay === -1) startingDay = 6; 
+
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < startingDay; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayDate = new Date(year, month, day);
+                const dayOfWeek = dayDate.getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                
+                const dayInfo = u.shifts[dateKey] || {};
+                const shift = dayInfo.shift || '';
+                
+                let dayType = dayInfo.dayType || (isWeekend ? 'festivo' : 'auto');
+                const hasNotes = u.notes && u.notes[dateKey] && u.notes[dateKey].trim().length > 0;
+
+                let bgClass = isWeekend ? 'bg-slate-950/30 weekend-cell' : 'bg-slate-950/10';
+                if (dayType === 'festivo') bgClass = 'bg-rose-950/20 festive-cell';
+                if (dayType === 'especial') bgClass = 'bg-purple-950/20';
+
+                const isToday = (dateKey === todayStr);
+                const isSelectedRange = selectedKeys.includes(dateKey);
+                
+                const isGuardDay = ['G', 'MG', 'NG'].includes(shift);
+                const guardClass = isGuardDay ? 'guard-border-subtle' : '';
+
+                const dayCell = document.createElement('div');
+                dayCell.className = `calendar-day-cell aspect-square border border-slate-800 rounded-2xl p-1.5 flex flex-col justify-between cursor-pointer transition-all ${bgClass} ${isSelectedRange ? 'day-selected-range' : ''} ${guardClass}`;
+                
+                dayCell.onmousedown = (e) => { if (e.shiftKey) e.preventDefault(); };
+
+                dayCell.onclick = (e) => handleDayClick(dateKey, dayDate, e);
+
+                dayCell.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    selectedDayKey = dateKey;
+                    updateSidebar();
+                    openModal(dateKey, day);
+                };
+
+                let shiftBadgeHtml = '';
+                if (shift) {
+                    const c = (u.colors && u.colors[shift]) ? u.colors[shift] : defaultColors[shift] || { bg: '#475569', text: '#ffffff', border: '#64748b' };
+                    shiftBadgeHtml = `<span class="text-[10px] font-extrabold px-1 py-0.5 rounded text-center block shadow-sm leading-none" style="background-color:${c.bg}; color:${c.text}; border:1px solid ${c.border}">${shift}</span>`;
+                }
+
+                dayCell.innerHTML = `
+                    <div class="flex justify-between items-center text-[11px]">
+                        <div class="flex items-center gap-1">
+                            <span class="${isToday ? 'day-today-subtle' : (isWeekend ? 'text-rose-400 font-bold' : 'text-slate-300 font-medium')}">${day}</span>
+                            ${hasNotes ? '<span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" title="Tiene nota"></span>' : ''}
+                        </div>
+                        ${dayType === 'festivo' ? `<span class="text-[7px] text-rose-400 font-semibold">FEST</span>` : ''}
+                        ${dayType === 'especial' ? '<span class="text-[7px] text-purple-400 font-semibold">ESP</span>' : ''}
+                    </div>
+                    ${shiftBadgeHtml}
+                `;
+                grid.appendChild(dayCell);
+            }
+
+            calculatePayroll();
+        }
+
+        function handleDayClick(dateKey, dateObj, event) {
+            if (isGuardPlacementMode) {
+                applyGuardPackFromDay(dateKey);
+                toggleGuardPlacementMode();
+                return;
+            }
+
+            const clickDate = new Date(dateKey);
+            const isOtherMonth = clickDate.getMonth() !== currentDate.getMonth() || clickDate.getFullYear() !== currentDate.getFullYear();
+
+            if (event.shiftKey && selectionAnchor) {
+                selectedKeys = getDatesInRange(selectionAnchor, dateKey);
+                updateRangeBar();
+                renderCalendar();
+            } else if (event.ctrlKey || event.metaKey) {
+                if (selectedKeys.includes(dateKey)) {
+                    selectedKeys = selectedKeys.filter(k => k !== dateKey);
+                } else {
+                    selectedKeys.push(dateKey);
+                }
+                selectionAnchor = dateKey;
+                updateRangeBar();
+                renderCalendar();
+            } else {
+                selectionAnchor = dateKey;
+                selectedDayKey = dateKey;
+                selectedKeys = [];
+                updateRangeBar();
+                updateSidebar();
+
+                if (isOtherMonth) {
+                    currentDate = new Date(clickDate.getFullYear(), clickDate.getMonth(), 1);
+                    renderCalendar();
+                }
+            }
+        }
+
+        function getDatesInRange(startKey, endKey) {
+            const start = new Date(startKey < endKey ? startKey : endKey);
+            const end = new Date(startKey < endKey ? endKey : startKey);
+            const range = [];
+            let curr = new Date(start);
+            while (curr <= end) {
+                range.push(curr.toISOString().split('T')[0]);
+                curr.setDate(curr.getDate() + 1);
+            }
+            return range;
+        }
+
+        function updateRangeBar() {
+            const bar = document.getElementById('rangeActionBar');
+            if (selectedKeys.length > 0) {
+                bar.classList.remove('hidden');
+                document.getElementById('rangeCount').innerText = selectedKeys.length;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        function clearRangeSelection() {
+            selectedKeys = [];
+            selectionAnchor = null;
+            updateRangeBar();
+            renderCalendar();
+        }
+
+        function applyRangeShift() {
+            const shift = document.getElementById('rangeShiftSelect').value;
+            const u = getUser();
+            selectedKeys.forEach(k => {
+                if (shift) {
+                    u.shifts[k] = { ...u.shifts[k], shift };
+                } else {
+                    delete u.shifts[k];
+                }
+            });
+            createAutoBackup(`Asignación múltiple (${selectedKeys.length} días)`);
+            saveData();
+            clearRangeSelection();
+        }
+
+        function toggleGuardPlacementMode() {
+            isGuardPlacementMode = !isGuardPlacementMode;
+            const alertBox = document.getElementById('guardModeAlert');
+            const btn = document.getElementById('btnGuardPack');
+            if (isGuardPlacementMode) {
+                alertBox.classList.remove('hidden');
+                btn.classList.add('ring-2', 'ring-indigo-400');
+            } else {
+                alertBox.classList.add('hidden');
+                btn.classList.remove('ring-2', 'ring-indigo-400');
+            }
+        }
+
+        function applyGuardPackFromDay(startKey) {
+            const u = getUser();
+            const pattern = ['M','M','M','M','M','MG','NG','N','N','N','N','N'];
+            const parts = startKey.split('-');
+            let curr = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+
+            for (let i = 0; i < pattern.length; i++) {
+                const year = curr.getFullYear();
+                const month = String(curr.getMonth() + 1).padStart(2, '0');
+                const day = String(curr.getDate()).padStart(2, '0');
+                const k = `${year}-${month}-${day}`;
+
+                u.shifts[k] = { ...u.shifts[k], shift: pattern[i] };
+                curr.setDate(curr.getDate() + 1);
+            }
+            createAutoBackup('Aplicado Pack Guardia (12 Días)');
+            saveData();
+            renderCalendar();
+            if (currentView === 'year') {
+                renderYearlyView();
+            }
+        }
+
+        function updateSidebar() {
+            const u = getUser();
+            const parts = selectedDayKey.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            const dayNames = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+            document.getElementById('sideDayNum').innerText = String(d.getDate()).padStart(2, '0');
+            document.getElementById('sideDayOfWeek').innerText = dayNames[d.getDay()];
+            document.getElementById('sideMonthName').innerText = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+
+            const shiftInfo = u.shifts[selectedDayKey] || {};
+            const shift = shiftInfo.shift || '';
+            
+            const badge = document.getElementById('sideShiftBadge');
+            const fullName = shiftFullNames[shift] || shift;
+            badge.innerText = shift ? `Turno: ${fullName}` : 'Sin Turno';
+
+            document.getElementById('dayNotesText').value = (u.notes && u.notes[selectedDayKey]) || '';
+
+            const bgBox = document.getElementById('shiftBgBox');
+            const overlay = document.getElementById('guardOverlay');
+
+            bgBox.className = "flex-1 my-2 rounded-2xl border border-slate-700/60 p-3.5 relative overflow-hidden flex flex-col justify-between gap-3 shift-bg-container ";
+
+            if (['G', 'MG', 'NG'].includes(shift)) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+
+            let baseShift = shift.replace('G', '');
+            if (u.customImages && u.customImages[baseShift]) {
+                bgBox.style.backgroundImage = `url('${u.customImages[baseShift]}')`;
+            } else {
+                bgBox.style.backgroundImage = 'none';
+                if (baseShift === 'M') bgBox.classList.add('sidebar-bg-M');
+                else if (baseShift === 'T') bgBox.classList.add('sidebar-bg-T');
+                else if (baseShift === 'N') bgBox.classList.add('sidebar-bg-N');
+                else bgBox.classList.add('sidebar-bg-default');
+            }
+        }
+
+        function saveDayNotes() {
+            const u = getUser();
+            if (!u.notes) u.notes = {};
+            const text = document.getElementById('dayNotesText').value;
+            if (text) {
+                u.notes[selectedDayKey] = text;
+            } else {
+                delete u.notes[selectedDayKey];
+            }
+            saveData();
+            const ind = document.getElementById('notesSavedIndicator');
+            ind.classList.remove('hidden');
+            setTimeout(() => ind.classList.add('hidden'), 1200);
+            renderCalendar();
+        }
+
+        function renderYearlyView() {
+            const year = currentDate.getFullYear();
+            document.getElementById('yearlyYearLabel').innerText = year;
+            if (document.getElementById('statsYearLabel')) {
+                document.getElementById('statsYearLabel').innerText = year;
+            }
+
+            const grid = document.getElementById('yearlyGrid');
+            grid.innerHTML = '';
+
+            const u = getUser();
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            for (let m = 0; m < 12; m++) {
+                const monthCard = document.createElement('div');
+                monthCard.className = "yearly-month-card space-y-2 shadow-sm transition-all";
+                
+                const totalDays = new Date(year, m + 1, 0).getDate();
+                let startingDay = new Date(year, m, 1).getDay() - 1;
+                if (startingDay === -1) startingDay = 6;
+
+                let miniDaysHtml = '';
+                for (let i = 0; i < startingDay; i++) {
+                    miniDaysHtml += `<div></div>`;
+                }
+
+                for (let d = 1; d <= totalDays; d++) {
+                    const k = `${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const shift = (u.shifts[k] || {}).shift;
+                    const hasNotes = u.notes && u.notes[k] && u.notes[k].trim().length > 0;
+                    
+                    const isToday = (k === todayStr);
+                    const isGuardDay = ['G', 'MG', 'NG'].includes(shift);
+                    
+                    let dayStyle = isDarkMode 
+                        ? "background-color: rgba(51, 65, 85, 0.4); color: #cbd5e1;" 
+                        : "background-color: #ffffff; color: #0f172a; border: 1px solid #e2e8f0;";
+
+                    if (shift) {
+                        const c = (u.colors && u.colors[shift]) ? u.colors[shift] : defaultColors[shift] || { bg: '#3b82f6', text: '#ffffff' };
+                        dayStyle = `background-color: ${c.bg}; color: ${c.text}; font-weight: bold;`;
+                    }
+
+                    let dayExtraClass = '';
+                    if (isGuardDay) dayExtraClass += ' border border-amber-500/80';
+                    if (isToday) dayExtraClass += ' ring-2 ring-blue-500 font-extrabold text-blue-400';
+
+                    miniDaysHtml += `
+                        <div class="text-[9px] rounded-sm text-center py-0.5 relative cursor-pointer ${dayExtraClass}" 
+                             style="${!isToday ? dayStyle : ''}"
+                             onclick="handleYearlyDayClick('${k}', event)"
+                             oncontextmenu="handleYearlyDayContextMenu('${k}', ${d}, event)">
+                            ${d}
+                            ${hasNotes ? '<span class="absolute top-0 right-0.5 w-1 h-1 rounded-full bg-amber-400"></span>' : ''}
+                        </div>`;
+                }
+
+                monthCard.innerHTML = `
+                    <div class="text-xs font-bold text-slate-300 border-b border-slate-800/80 pb-1">${monthNames[m]}</div>
+                    <div class="grid grid-cols-7 gap-1 text-[8px] font-bold text-slate-500 text-center">
+                        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span class="text-rose-400">S</span><span class="text-rose-400">D</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1">
+                        ${miniDaysHtml}
+                    </div>
+                `;
+                grid.appendChild(monthCard);
+            }
+
+            renderYearlyStats();
+        }
+
+        /* 2. CÁLCULO Y RENDERIZADO DE LAS ESTADÍSTICAS ANUALES */
+        function renderYearlyStats() {
+            const u = getUser();
+            const year = currentDate.getFullYear();
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            let countsSoFar = {};
+            let countsProjected = {};
+            let totalWorkedSoFar = 0;
+            let totalProjected = 0;
+
+            Object.keys(u.shifts || {}).forEach(k => {
+                if (k.startsWith(`${year}-`)) {
+                    const shift = u.shifts[k].shift;
+                    if (shift) {
+                        countsProjected[shift] = (countsProjected[shift] || 0) + 1;
+                        totalProjected++;
+
+                        if (k <= todayStr) {
+                            countsSoFar[shift] = (countsSoFar[shift] || 0) + 1;
+                            totalWorkedSoFar++;
+                        }
+                    }
+                }
+            });
+
+            function buildBadges(countsObj, totalCount) {
+                if (totalCount === 0) {
+                    return `<span class="text-[10px] text-slate-500 italic">Sin turnos asignados</span>`;
+                }
+                let html = `<span class="bg-blue-600/30 text-blue-300 border border-blue-500/40 text-[10px] font-black px-2 py-0.5 rounded-lg mr-1">TOTAL: ${totalCount}</span>`;
+                Object.keys(countsObj).sort().forEach(code => {
+                    const c = (u.colors && u.colors[code]) ? u.colors[code] : defaultColors[code] || { bg: '#475569', text: '#ffffff', border: '#64748b' };
+                    html += `
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm" style="background-color:${c.bg}; color:${c.text}; border:1px solid ${c.border}">
+                            <span>${code}:</span>
+                            <span class="font-extrabold">${countsObj[code]}</span>
+                        </span>
+                    `;
+                });
+                return html;
+            }
+
+            document.getElementById('statsWorkedSoFar').innerHTML = buildBadges(countsSoFar, totalWorkedSoFar);
+            document.getElementById('statsProjectedYear').innerHTML = buildBadges(countsProjected, totalProjected);
+        }
+
+        function handleYearlyDayClick(dateKey, event) {
+            selectedDayKey = dateKey;
+            const clickDate = new Date(dateKey);
+            currentDate = new Date(clickDate.getFullYear(), clickDate.getMonth(), 1);
+            
+            if (isGuardPlacementMode) {
+                applyGuardPackFromDay(dateKey);
+                toggleGuardPlacementMode();
+                return;
+            }
+
+            updateSidebar();
+            renderCalendar();
+        }
+
+        function handleYearlyDayContextMenu(dateKey, day, event) {
+            event.preventDefault();
+            selectedDayKey = dateKey;
+            const clickDate = new Date(dateKey);
+            currentDate = new Date(clickDate.getFullYear(), clickDate.getMonth(), 1);
+            updateSidebar();
+            renderCalendar();
+            openModal(dateKey, day);
+        }
+
+        function calculatePayroll() {
+            const u = getUser();
+            const cfg = u.config;
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            let nightHours = 0, mgHours = 0, ngHours = 0;
+            let guardDispoPay = 0, guardInterventionDays = 0;
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const info = u.shifts[dateKey] || {};
+                const shift = info.shift;
+                const d = new Date(year, month, day);
+                const dayOfWeek = d.getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+                let dispoType = isWeekend ? 'finde' : 'laborable';
+                if (info.dayType === 'festivo') dispoType = 'festivo';
+                if (info.dayType === 'especial') dispoType = 'especial';
+
+                if (shift === 'N') nightHours += 8;
+                else if (shift === 'NG') { ngHours += 8; guardDispoPay += GUARDIA_DISPO[dispoType]; guardInterventionDays++; }
+                else if (shift === 'MG') { mgHours += 8; guardDispoPay += GUARDIA_DISPO[dispoType]; guardInterventionDays++; }
+                else if (shift === 'G') { guardDispoPay += GUARDIA_DISPO[dispoType]; guardInterventionDays++; }
+            }
+
+            let guardInterventionPay = GUARDIA_INTERVENCION[guardInterventionDays] || (guardInterventionDays * 52.35);
+            let totalGuardPay = guardDispoPay + guardInterventionPay;
+            let nightPay = nightHours * cfg.nightRate;
+            let extraMgPay = mgHours * HORA_EXTRA_MG;
+            let extraNgPay = ngHours * HORA_EXTRA_NG;
+
+            const baseTotal = cfg.baseSalary + cfg.carencia + cfg.funcion;
+            const prorrataExtra = 365.92;
+            const brutoTotal = baseTotal + nightPay + totalGuardPay + extraMgPay + extraNgPay + prorrataExtra;
+
+            const cuotaSS = brutoTotal * 0.0485;
+            const desempleo = brutoTotal * 0.0165;
+            const baseIrpf = brutoTotal - prorrataExtra;
+            const irpf = baseIrpf * (cfg.irpf / 100);
+
+            const totalDeducciones = cuotaSS + desempleo + irpf;
+            const netoTotal = brutoTotal - prorrataExtra - totalDeducciones;
+
+            document.getElementById('valBaseSalaryTotal').innerText = baseTotal.toFixed(2) + ' €';
+            document.getElementById('valBaseSalaryBreakdown').innerText = `(${cfg.baseSalary.toFixed(2)}€ + ${cfg.carencia.toFixed(2)}€ + ${cfg.funcion.toFixed(2)}€)`;
+            document.getElementById('valProrrataExtra').innerText = prorrataExtra.toFixed(2) + ' €';
+            document.getElementById('countNights').innerText = nightHours;
+            document.getElementById('valNights').innerText = nightPay.toFixed(2) + ' €';
+            document.getElementById('valGuardias').innerText = totalGuardPay.toFixed(2) + ' €';
+            document.getElementById('countMgHours').innerText = mgHours;
+            document.getElementById('valExtrasMG').innerText = extraMgPay.toFixed(2) + ' €';
+            document.getElementById('countNgHours').innerText = ngHours;
+            document.getElementById('valExtrasNG').innerText = extraNgPay.toFixed(2) + ' €';
+            document.getElementById('valBruto').innerText = brutoTotal.toFixed(2) + ' €';
+            document.getElementById('valSS').innerText = '-' + cuotaSS.toFixed(2) + ' €';
+            document.getElementById('valDesempleo').innerText = '-' + desempleo.toFixed(2) + ' €';
+            document.getElementById('valIRPF').innerText = '-' + irpf.toFixed(2) + ' €';
+            document.getElementById('valNeto').innerText = netoTotal.toFixed(2) + ' €';
+        }
+
+        function openConfirmClearMonthModal() { document.getElementById('confirmClearMonthModal').classList.remove('hidden'); }
+        function closeConfirmClearMonthModal() { document.getElementById('confirmClearMonthModal').classList.add('hidden'); }
+
+        function confirmClearCurrentMonth() {
+            createAutoBackup('Borrado de mes completo');
+            const u = getUser();
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            
+            for (let day = 1; day <= totalDays; day++) {
+                const k = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                delete u.shifts[k];
+            }
+
+            saveData();
+            closeConfirmClearMonthModal();
+            renderCalendar();
+            updateSidebar();
+        }
+
+        function renderExistingShiftsColorList() {
+            const u = getUser();
+            const container = document.getElementById('existingShiftsColorList');
+            container.innerHTML = '';
+
+            const availableColors = u.colors || defaultColors;
+
+            Object.keys(availableColors).forEach(sCode => {
+                const colorObj = availableColors[sCode];
+                const row = document.createElement('div');
+                row.className = "flex flex-col gap-1.5 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60";
+                
+                const fullName = shiftFullNames[sCode] || `${sCode} - Turno ${sCode}`;
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-1.5 w-full">
+                        <input type="text" value="${sCode}" onchange="updateShiftCode('${sCode}', this.value)" class="font-bold text-white text-xs bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 uppercase w-16 text-center" title="Editar Título / Código">
+                        <input type="text" value="${fullName}" onchange="updateShiftFullName('${sCode}', this.value)" class="flex-1 font-medium text-slate-200 text-xs bg-slate-900 border border-slate-700 rounded-lg px-2 py-1" placeholder="Nombre completo del turno" title="Editar Nombre del Turno">
+                        <button onclick="deleteShift('${sCode}')" class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition" title="Borrar Turno">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-end gap-3 w-full pt-1 border-t border-slate-700/40">
+                        <div class="flex items-center gap-1">
+                            <span class="text-[9px] text-slate-400">Fondo:</span>
+                            <input type="color" value="${colorObj.bg}" onchange="updateShiftColor('${sCode}', 'bg', this.value)" class="w-6 h-5 bg-transparent rounded cursor-pointer">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-[9px] text-slate-400">Borde:</span>
+                            <input type="color" value="${colorObj.border || colorObj.bg}" onchange="updateShiftColor('${sCode}', 'border', this.value)" class="w-6 h-5 bg-transparent rounded cursor-pointer">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function updateShiftCode(oldCode, newCode) {
+            newCode = newCode.toUpperCase().trim();
+            if (!newCode || newCode === oldCode) return;
+            const u = getUser();
+            if (!u.colors) u.colors = JSON.parse(JSON.stringify(defaultColors));
+
+            if (u.colors[newCode]) {
+                openCustomAlertModal("Código Duplicado", "Ya existe un turno con ese código.");
+                renderExistingShiftsColorList();
+                return;
+            }
+
+            u.colors[newCode] = u.colors[oldCode];
+            delete u.colors[oldCode];
+
+            shiftFullNames[newCode] = shiftFullNames[oldCode] ? shiftFullNames[oldCode].replace(oldCode, newCode) : `${newCode} - Turno ${newCode}`;
+            delete shiftFullNames[oldCode];
+            saveShiftFullNames();
+
+            Object.keys(u.shifts || {}).forEach(k => {
+                if (u.shifts[k].shift === oldCode) {
+                    u.shifts[k].shift = newCode;
+                }
+            });
+
+            saveData();
+            renderExistingShiftsColorList();
+            renderCalendar();
+            updateSidebar();
+            if (currentView === 'year') renderYearlyView();
+        }
+
+        function updateShiftFullName(code, newName) {
+            newName = newName.trim();
+            if (!newName) return;
+            shiftFullNames[code] = newName;
+            saveShiftFullNames();
+            updateSidebar();
+        }
+
+        function deleteShift(code) {
+            openConfirmDeleteShiftModal(code);
+        }
+
+        function executeDeleteShift(code) {
+            const u = getUser();
+            
+            if (u.colors) delete u.colors[code];
+            delete shiftFullNames[code];
+            saveShiftFullNames();
+
+            Object.keys(u.shifts || {}).forEach(k => {
+                if (u.shifts[k].shift === code) {
+                    delete u.shifts[k].shift;
+                }
+            });
+
+            saveData();
+            renderExistingShiftsColorList();
+            renderCalendar();
+            updateSidebar();
+            if (currentView === 'year') renderYearlyView();
+        }
+
+        function updateShiftColor(code, type, value) {
+            const u = getUser();
+            if (!u.colors) u.colors = JSON.parse(JSON.stringify(defaultColors));
+            if (!u.colors[code]) {
+                u.colors[code] = { bg: '#3b82f6', text: '#ffffff', border: '#1d4ed8' };
+            }
+            u.colors[code][type] = value;
+            saveData();
+            renderCalendar();
+            if (currentView === 'year') {
+                renderYearlyView();
+            }
+        }
+
+        function openCustomShiftModal() { 
+            renderExistingShiftsColorList();
+            document.getElementById('customShiftModal').classList.remove('hidden'); 
+        }
+        function closeCustomShiftModal() { document.getElementById('customShiftModal').classList.add('hidden'); }
+        function confirmAddShift() {
+            const code = document.getElementById('newShiftCode').value.toUpperCase().trim();
+            const name = document.getElementById('newShiftName').value.trim();
+            const bg = document.getElementById('newShiftBg').value;
+            const bd = document.getElementById('newShiftBd').value;
+
+            if (!code) return openCustomAlertModal("Etiqueta requerida", "Introduce un código de turno.");
+
+            const u = getUser();
+            if (!u.colors) u.colors = JSON.parse(JSON.stringify(defaultColors));
+            u.colors[code] = { bg, text: '#ffffff', border: bd };
+
+            shiftFullNames[code] = name || `${code} - Turno Personalizado`;
+            saveShiftFullNames();
+
+            document.getElementById('newShiftCode').value = '';
+            document.getElementById('newShiftName').value = '';
+
+            saveData();
+            closeCustomShiftModal();
+            renderCalendar();
+            if (currentView === 'year') {
+                renderYearlyView();
+            }
+        }
+
+        function openSettingsModal() {
+            const u = getUser();
+            document.getElementById('cfgBaseSalary').value = u.config.baseSalary;
+            document.getElementById('cfgCarencia').value = u.config.carencia;
+            document.getElementById('cfgFuncion').value = u.config.funcion;
+            document.getElementById('cfgIrpf').value = u.config.irpf;
+
+            tempAvatarData = null;
+            deletedAvatar = false;
+            deletedShiftImages = {};
+
+            document.getElementById('userAvatarUpload').value = '';
+            document.getElementById('imgUpload_M').value = '';
+            document.getElementById('imgUpload_T').value = '';
+            document.getElementById('imgUpload_N').value = '';
+
+            updateSettingsAvatarPreview();
+
+            const bList = document.getElementById('backupsList');
+            bList.innerHTML = '';
+            if (backupsHistory.length === 0) {
+                bList.innerHTML = `<div class="text-slate-500 text-[10px]">No hay copias disponibles</div>`;
+            } else {
+                backupsHistory.forEach((b, idx) => {
+                    const row = document.createElement('div');
+                    row.className = "flex justify-between items-center text-[10px] border-b border-slate-800/50 pb-1";
+                    row.innerHTML = `
+                        <div>
+                            <span class="font-bold text-blue-400">${b.version}</span> - 
+                            <span class="text-slate-300">${b.reason}</span>
+                            <div class="text-[8px] text-slate-500">${b.timestamp}</div>
+                        </div>
+                        <button onclick="restoreBackup(${idx})" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-2 py-0.5 rounded text-[9px] transition">Restaurar</button>
+                    `;
+                    bList.appendChild(row);
+                });
+            }
+
+            document.getElementById('settingsModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function previewUserAvatar(input) {
+            if (input.files && input.files[0]) {
+                compressImageFile(input.files[0], 200, 200, 0.85).then(compressedData => {
+                    tempAvatarData = compressedData;
+                    deletedAvatar = false;
+                    updateSettingsAvatarPreview();
+                    
+                    const mainContainer = document.getElementById('userAvatarContainer');
+                    if (mainContainer) {
+                        mainContainer.innerHTML = `<img src="${tempAvatarData}" class="w-full h-full object-cover rounded-full">`;
+                    }
+                });
+            }
+        }
+
+        function updateSettingsAvatarPreview() {
+            const u = getUser();
+            const prev = document.getElementById('avatarPreview');
+            if (!deletedAvatar && (tempAvatarData || u.avatar)) {
+                const src = tempAvatarData || u.avatar;
+                prev.innerHTML = `<img src="${src}" class="w-full h-full object-cover">`;
+            } else {
+                const letter = (u.name && u.name.length > 0) ? u.name.charAt(0).toUpperCase() : 'U';
+                prev.innerHTML = `<span>${letter}</span>`;
+            }
+        }
+
+        function removeAvatarImage() {
+            deletedAvatar = true;
+            tempAvatarData = null;
+            document.getElementById('userAvatarUpload').value = '';
+            updateSettingsAvatarPreview();
+            
+            const u = getUser();
+            const mainContainer = document.getElementById('userAvatarContainer');
+            if (mainContainer) {
+                const letter = (u.name && u.name.length > 0) ? u.name.charAt(0).toUpperCase() : 'U';
+                mainContainer.innerHTML = `<span id="userAvatar">${letter}</span>`;
+            }
+        }
+
+        function removeShiftImage(shiftKey) {
+            deletedShiftImages[shiftKey] = true;
+            const input = document.getElementById(`imgUpload_${shiftKey}`);
+            if (input) input.value = '';
+        }
+
+        function restoreBackup(index) {
+            if (!confirm("¿Restaurar esta copia de seguridad? Se perderán los cambios no guardados.")) return;
+            const backup = backupsHistory[index];
+            appData = JSON.parse(backup.data);
+            saveData();
+            closeSettingsModal();
+            showAppLayout();
+        }
+
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+
+        function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
+            return new Promise((resolve) => {
+                if (!file) return resolve(null);
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function saveSettings() {
+            try {
+                const u = getUser();
+                u.config.baseSalary = parseFloat(document.getElementById('cfgBaseSalary').value) || 0;
+                u.config.carencia = parseFloat(document.getElementById('cfgCarencia').value) || 0;
+                u.config.funcion = parseFloat(document.getElementById('cfgFuncion').value) || 0;
+                u.config.irpf = parseFloat(document.getElementById('cfgIrpf').value) || 0;
+
+                if (!u.customImages) u.customImages = {};
+
+                if (deletedAvatar) {
+                    u.avatar = null;
+                } else if (tempAvatarData) {
+                    u.avatar = tempAvatarData;
+                }
+
+                const shiftsToProcess = [
+                    { id: 'imgUpload_M', key: 'M' },
+                    { id: 'imgUpload_T', key: 'T' },
+                    { id: 'imgUpload_N', key: 'N' }
+                ];
+
+                const shiftPromises = shiftsToProcess.map(item => {
+                    if (deletedShiftImages[item.key]) {
+                        delete u.customImages[item.key];
+                    }
+                    const input = document.getElementById(item.id);
+                    if (input && input.files && input.files[0]) {
+                        return compressImageFile(input.files[0], 800, 800, 0.7).then(compressed => ({ key: item.key, data: compressed }));
+                    }
+                    return Promise.resolve(null);
+                });
+
+                const shiftResults = await Promise.all(shiftPromises);
+
+                shiftResults.forEach(res => {
+                    if (res && res.data) {
+                        u.customImages[res.key] = res.data;
+                    }
+                });
+
+                createAutoBackup('Ajustes e Imágenes guardados');
+                saveData();
+                closeSettingsModal();
+                
+                updateAvatarUI();
+                renderCalendar();
+                updateSidebar();
+            } catch (err) {
+                console.error("Error al guardar ajustes:", err);
+                closeSettingsModal();
+            }
+        }
+
+        function openAddUserModal() { document.getElementById('addUserModal').classList.remove('hidden'); }
+        function closeAddUserModal() { document.getElementById('addUserModal').classList.add('hidden'); }
+        function confirmAddUser() {
+            const name = document.getElementById('newUserName').value.trim();
+            const email = document.getElementById('newUserMail').value.toLowerCase().trim();
+            if (!email || !name) return openCustomAlertModal("Campos Incompletos", "Rellena todos los datos.");
+
+            appData[email] = createNewUserObj(name, email);
+            currentUserEmail = email;
+            localStorage.setItem('activeUserSession', currentUserEmail);
+            saveData();
+            closeAddUserModal();
+            showAppLayout();
+        }
+
+        function openModal(dateKey, day) {
+            const u = getUser();
+            const info = u.shifts[dateKey] || {};
+            const select = document.getElementById('modalShift');
+            
+            select.innerHTML = '<option value="">Sin Turno / Libre</option>';
+            const availableColors = u.colors || defaultColors;
+            
+            Object.keys(availableColors).forEach(sCode => {
+                const opt = document.createElement('option');
+                opt.value = sCode;
+                opt.innerText = shiftFullNames[sCode] || `${sCode}`;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('modalTitle').innerText = `Editar Día ${day}`;
+            select.value = info.shift || '';
+            document.getElementById('modalDayType').value = info.dayType || 'auto';
+            document.getElementById('dayModal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('dayModal').classList.add('hidden'); }
+        
+        function clearSingleDay() {
+            const u = getUser();
+            if (u.shifts && u.shifts[selectedDayKey]) {
+                delete u.shifts[selectedDayKey];
+            }
+            saveData();
+            closeModal();
+            renderCalendar();
+            updateSidebar();
+        }
+
+        function saveModal() {
+            const shift = document.getElementById('modalShift').value;
+            const dayType = document.getElementById('modalDayType').value;
+            const u = getUser();
+
+            if (!u.shifts) u.shifts = {};
+
+            if (shift || dayType !== 'auto') {
+                u.shifts[selectedDayKey] = { shift, dayType };
+            } else {
+                delete u.shifts[selectedDayKey];
+            }
+
+            saveData();
+            closeModal();
+            renderCalendar();
+            updateSidebar();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
