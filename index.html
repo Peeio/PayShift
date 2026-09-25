@@ -12,6 +12,15 @@
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Librería CryptoJS para cifrado de LocalStorage -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <!-- SDKs de Firebase (v9 Compat para compatibilidad sencilla en CDN) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <style>
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
         
@@ -51,17 +60,11 @@
             color: #0f172a;
         }
         
-        /* 1. PANEL IZQUIERDO MISMO COLOR AZUL EN MODO CLARO */
+        /* PANEL IZQUIERDO MISMO COLOR AZUL EN MODO CLARO */
         html:not(.dark) #sidebarPanel {
             background-color: #e0f2fe;
             border-color: #bae6fd;
             box-shadow: 0 4px 12px -2px rgba(100, 116, 139, 0.08);
-        }
-
-        /* FONDO BLANCO SEMI-TRANSPARENTE PARA EL BANNER SUPERIOR DEL USUARIO EN MODO CLARO */
-        **html:not(.dark) #sidebarUserHeader {
-            background-color: rgba(255, 255, 255, 0.7);
-            border-color: #bae6fd;
         }
 
         html.dark #sidebarPanel {
@@ -69,7 +72,7 @@
             border-color: #334155;
         }
 
-        /* 8. PANELES CENTRALES Y DERECHOS SIN SUPERPOSICIÓN GLOBAL */
+        /* PANELES CENTRALES Y DERECHOS SIN SUPERPOSICIÓN GLOBAL */
         html:not(.dark) aside:not(#sidebarPanel),
         html:not(.dark) #monthlyView,
         html:not(.dark) #yearlyView,
@@ -116,31 +119,19 @@
             width: 100%;
         }
 
-        html:not(.dark) #yearly-month-card {
-            background-color: #f0f9ff;
+        html:not(.dark) #yearlyStatsBox,
+        html:not(.dark) #shiftBgBox {
             border: 1px solid #bae6fd;
         }
 
-	html:not(.dark) #yearlyStatsBox {
-		border: 1px solid #bae6fd;
-	}
-
-	html.dark #yearlyStatsBox {
-		border: 1px solid #1e293b;
-	}
-
-	html:not(.dark) #shiftBgBox {
-		border: 1px solid #bae6fd;
-	}
+        html.dark #yearlyStatsBox {
+            border: 1px solid #1e293b;
+        }
 
         html.dark .yearly-month-card {
             background-color: rgba(15, 23, 42, 0.6);
             border: 1px solid #1e293b;
         }
-
-	html.not(.dark) .yearlyStatsBox {
-		border: 1px solid #bae6fd;
-	}
 
         html:not(.dark) #yearlyGrid .text-slate-300 {
             color: #0f172a;
@@ -214,6 +205,8 @@
         html:not(.dark) #confirmClearMonthModal > div,
         html:not(.dark) #confirmDeleteShiftModal > div,
         html:not(.dark) #customAlertModal > div,
+        html:not(.dark) #setupPayrollModal > div,
+        html:not(.dark) #helpModal > div,
         html:not(.dark) #loginAlertModal > div {
             background-color: #ffffff;
             border-color: #cbd5e1;
@@ -223,6 +216,7 @@
         html:not(.dark) select,
         html:not(.dark) input[type="number"],
         html:not(.dark) input[type="text"],
+        html:not(.dark) input[type="password"],
         html:not(.dark) input[type="email"] {
             background-color: #f8fafc;
             color: #0f172a;
@@ -244,17 +238,13 @@
             border-color: #fecdd3;
         }
 
-        html:not(.dark) .fondo-azul-claro {
-            background-color: #e0f2fe;
-        }
-
-        /* 4. BLOQUE COPIAS DE SEGURIDAD MODO CLARO */
+        /* BLOQUE COPIAS DE SEGURIDAD MODO CLARO */
         html:not(.dark) #backupsList {
             background-color: #f0f9ff;
             border-color: #bae6fd;
         }
 
-        /* 7. CONTRASTE MEJORADO EN BLOQUE NÓMINA EN MODO CLARO */
+        /* CONTRASTE MEJORADO EN BLOQUE NÓMINA EN MODO CLARO Y PANEL DE SELECCIÓN MÚLTIPLE */
         html:not(.dark) .payroll-box {
             background-color: #ffffff;
             border-color: #bae6fd;
@@ -263,7 +253,6 @@
         html:not(.dark) .payroll-box .payroll-label,
         html:not(.dark) .payroll-box .payroll-value {
             color: #1e293b;
-
         }
         html:not(.dark) .payroll-box .payroll-val {
             color: #0f172a;
@@ -273,10 +262,36 @@
             color: #475569;
         }
 
+        html:not(.dark) #rangeActionBar {
+            background-color: #e0f2fe;
+            border-color: #0284c7;
+            color: #0369a1;
+        }
+        html:not(.dark) #rangeActionBar select {
+            background-color: #ffffff;
+            color: #0f172a;
+            border-color: #7dd3fc;
+        }
+        html:not(.dark) #rangeActionBar button.text-slate-300 {
+            color: #0369a1;
+        }
+        html:not(.dark) #rangeActionBar button.text-slate-300:hover {
+            color: #0c4a6e;
+        }
+
         .btn-view-toggle {
             border-radius: 0.5rem;
             border-width: 1px;
             box-sizing: border-box;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
         }
 
         input[type="file"]::file-selector-button {
@@ -336,66 +351,157 @@
             box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
         }
 
+        .day-selected-single {
+            outline: 2px solid #eab308 !important;
+            box-shadow: 0 0 8px rgba(234, 179, 8, 0.5) !important;
+        }
+
         .guard-border-subtle {
             border: 2px solid #f59e0b;
         }
 
         /* ANIMACIÓN Y DESLIZAMIENTO DEL PANEL DE NÓMINA */
-	/* 1. Definimos las animaciones/transiciones del panel */
-		.payroll-panel-container {
-    			transition: transform 0.3s ease-in-out, 
-                	max-width 0.3s ease-in-out, 
-	                max-height 0.3s ease-in-out, 
-        	        opacity 0.3s ease-in-out, 
-                	margin 0.3s ease-in-out;
-		}
+        .payroll-panel-container {
+            transition: transform 0.3s ease-in-out, 
+                        max-width 0.3s ease-in-out, 
+                        max-height 0.3s ease-in-out, 
+                        opacity 0.3s ease-in-out, 
+                        margin 0.3s ease-in-out;
+        }
 
-	/* 2. Base común para ocultar */
-		.payroll-hidden {
-		    opacity: 0;
-		    pointer-events: none;
-		    overflow: hidden;
-		}	
+        .payroll-hidden {
+            opacity: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }	
 
-	/* 3. Colapso horizontal en Desktop */
-		@media (min-width: 1024px) {
-		    .payroll-hidden {
-		        transform: translateX(105%);
-		        max-width: 0px !important;
-		        margin-left: -0.75rem;
-		    }
-		}
+        @media (min-width: 1024px) {
+            .payroll-hidden {
+                transform: translateX(105%);
+                max-width: 0px !important;
+                margin-left: -0.75rem;
+            }
+        }
 
-	/* 4. Colapso vertical en Móvil/Tablet */
-		@media (max-width: 1023px) {
-		    .payroll-hidden {
-		        transform: translateY(105%);
-		        max-height: 0px !important;
-		        margin-top: -0.75rem;
-		    }
-		}
+        @media (max-width: 1023px) {
+            .payroll-hidden {
+                transform: translateY(105%);
+                max-height: 0px !important;
+                margin-top: -0.75rem;
+            }
+        }
+
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            20% { transform: rotate(-12deg); }
+            40% { transform: rotate(12deg); }
+            60% { transform: rotate(-8deg); }
+            80% { transform: rotate(8deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* Aplica la animación al icono cuando se hace hover en el botón */
+        .btn-clear-month:hover [data-lucide="trash-2"] {
+            animation: shake 0.4s ease-in-out;
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen lg:h-screen flex flex-col p-2 md:p-3 overflow-x-hidden select-none">
+<body class="bg-slate-950 text-slate-100 min-h-screen lg:h-screen flex flex-col p-2 md:p-3 overflow-x-hidden select-none" onload="init()">
 
-    <!-- Pantalla de Login -->
+    <!-- Pantalla de Login / Registro -->
     <div id="authScreen" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl">
             <div class="text-center space-y-2">
                 <div class="inline-flex p-3 bg-blue-600/20 text-blue-400 rounded-2xl mb-2">
                     <i data-lucide="calendar" class="w-8 h-8"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white">Control de Turnos</h2>
-                <p class="text-xs text-slate-400">Introduce tu usuario para acceder</p>
+                <h2 id="authTitle" class="text-2xl font-bold text-white">Control de Turnos</h2>
+                <p id="authSubtitle" class="text-xs text-slate-400">Introduce tus datos para acceder</p>
             </div>
 
             <div id="loginBox" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Correo Electrónico / Usuario</label>
-                    <input type="text" id="authEmail" onkeyup="if(event.key === 'Enter') handleLogin()" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="usuario@ejemplo.com">
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Usuario *</label>
+                    <input type="text" id="authName" onkeyup="if(event.key === 'Enter') handleAuthAction()" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="Nombre de usuario">
                 </div>
-                <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm transition shadow-lg shadow-blue-600/30">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Contraseña *</label>
+                    <input type="password" id="authPassword" onkeyup="if(event.key === 'Enter') handleAuthAction()" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                </div>
+                <div id="emailContainer" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Correo Electrónico (Opcional)</label>
+                    <input type="email" id="authEmail" onkeyup="if(event.key === 'Enter') handleAuthAction()" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500" placeholder="usuario@ejemplo.com">
+                </div>
+                <button id="authPrimaryBtn" onclick="handleAuthAction()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm transition shadow-lg shadow-blue-600/30">
                     Acceder a la Aplicación
+                </button>
+
+<!-- NUEVO: Botón de Google -->
+<button type="button" onclick="handleGoogleLogin()" class="w-full bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3 rounded-xl text-sm transition shadow-lg flex items-center justify-center gap-2 mt-2">
+    <svg class="w-4 h-4" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+    </svg>
+    Continuar con Google
+</button>
+                <div class="text-center pt-2">
+                    <button id="authToggleBtn" type="button" onclick="toggleAuthMode()" class="text-xs text-blue-400 hover:underline font-semibold">
+                        ¿Usuario nuevo? Regístrate aquí
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuración Inicial de Salario para Usuarios Nuevos -->
+    <div id="setupPayrollModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[70]">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl text-xs">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div>
+                    <h4 class="font-bold text-white text-sm">Configuración de Salario Inicial</h4>
+                    <p class="text-[10px] text-slate-400">Ingresa tus conceptos salariales para el cálculo de la nómina.</p>
+                </div>
+            </div>
+
+            <div id="setupPayrollWarning" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-400 p-2.5 rounded-xl text-[11px] font-medium flex items-center gap-2">
+                <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0"></i>
+                <span>Uno o más valores no son numéricos y tomarán 0 como valor de referencia.</span>
+            </div>
+
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">Sueldo Base (€):</label>
+                        <input type="text" id="initBaseSalary" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:border-blue-500" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">Plus Carencia (€):</label>
+                        <input type="text" id="initCarencia" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:border-blue-500" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">Plus Función (€):</label>
+                        <input type="text" id="initFuncion" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:border-blue-500" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">Prorrata Pagas Extra (€):</label>
+                        <input type="text" id="initProrrataExtra" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:border-blue-500" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">Tarifa Nocturnidad (€/h):</label>
+                        <input type="text" id="initNightRate" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:border-blue-500" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">% Retención IRPF:</label>
+                        <input type="text" id="initIrpf" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:border-blue-500" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="button" onclick="confirmSetupPayroll()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-blue-600/30">
+                    Guardar y Continuar
                 </button>
             </div>
         </div>
@@ -418,14 +524,26 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button onclick="toggleDarkMode()" class="p-1 hover:bg-slate-700/60 rounded-lg text-amber-400 transition" title="Alternar Modo Oscuro/Claro">
-                        <i data-lucide="sun" id="themeIcon" class="w-4 h-4"></i>
+
+                    <button onclick="toggleDarkMode()" 
+                            class="group relative p-1 hover:bg-slate-700/60 rounded-lg transition-colors duration-200 flex items-center justify-center w-6 h-6" 
+                            title="Alternar Modo Oscuro/Claro">
+                        
+                        <i id="themeIconBase" data-lucide="moon" 
+                           class="w-4 h-4 text-slate-300 absolute transition-all duration-300 transform scale-100 rotate-0 opacity-100 group-hover:scale-0 group-hover:rotate-90 group-hover:opacity-0"></i>
+
+                        <i id="themeIconHover" data-lucide="sun" 
+                           class="w-4 h-4 text-amber-400 absolute transition-all duration-300 transform scale-0 -rotate-90 opacity-0 group-hover:scale-100 group-hover:rotate-0 group-hover:opacity-100"></i>
+                    </button>
+
+                    <button onclick="openHelpModal()" class="p-1 hover:bg-slate-700/60 rounded-lg text-slate-300 transition" title="Ayuda y Atajos">
+                        <i data-lucide="help-circle" class="w-4 h-4"></i>
                     </button>
                     <button onclick="openAddUserModal()" class="p-1 hover:bg-slate-700/60 rounded-lg text-slate-300 transition" title="Añadir Usuario">
                         <i data-lucide="user-plus" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="openSettingsModal()" class="p-1 hover:bg-slate-700/60 rounded-lg text-slate-300 transition" title="Ajustes">
-                        <i data-lucide="settings" class="w-4 h-4"></i>
+                    <button onclick="openSettingsModal()" class="group p-1 hover:bg-slate-700/60 active:scale-95 rounded-lg text-slate-300 transition-all duration-200" title="Ajustes">
+                        <i data-lucide="settings" class="w-4 h-4 transition-transform duration-300 ease-in-out group-hover:rotate-90"></i>
                     </button>
                     <button onclick="handleLogout()" class="p-1 hover:bg-rose-500/20 text-rose-400 rounded-lg transition" title="Cerrar Sesión">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
@@ -475,7 +593,7 @@
             </div>
         </aside>
 
-        <!-- PANEL CENTRAL (Crece y ocupa todo el espacio cuando la nómina está oculta) -->
+        <!-- PANEL CENTRAL -->
         <main class="flex-1 flex flex-col gap-2 h-full overflow-hidden transition-all duration-300">
             
             <div class="main-header-block bg-slate-900 border border-slate-800 p-2.5 rounded-2xl flex flex-wrap items-center justify-between gap-2 shadow-sm flex-shrink-0">
@@ -499,10 +617,12 @@
                     <button id="btnGuardPack" onclick="toggleGuardPlacementMode()" class="btn-guard-pack bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm">
                         <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Pack Guardia
                     </button>
-                    <button onclick="openConfirmClearMonthModal()" class="btn-clear-month bg-rose-600 hover:bg-rose-500 text-white border border-rose-500 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Borrar Mes
+                    <button onclick="openConfirmClearMonthModal()" 
+                            class="btn-clear-month bg-rose-600 hover:bg-rose-500 active:scale-95 text-white border border-rose-500 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all duration-200 shadow-sm" 
+                            title="Borrar Mes">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5 origin-center inline-block"></i>
+                        <span>Borrar Mes</span>
                     </button>
-                    <!-- BOTÓN PARA MOSTRAR/OCULTAR LA NÓMINA -->
                     <button id="btnTogglePayroll" onclick="togglePayrollPanel()" class="bg-blue-600 hover:bg-blue-500 text-white border border-blue-500 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition shadow-sm" title="Ocultar/Mostrar Nómina">
                         <i data-lucide="panel-right-close" id="iconTogglePayroll" class="w-3.5 h-3.5"></i>
                     </button>
@@ -548,7 +668,6 @@
             <div id="yearlyView" class="hidden bg-slate-900 border border-slate-800 p-3.5 rounded-3xl space-y-3 flex-1 overflow-y-auto">
                 <div class="text-xs font-bold text-slate-300">Calendario Global <span id="yearlyYearLabel">2026</span></div>
                 
-                <!-- BLOQUE DE ESTADÍSTICAS ANUALES DE TURNOS -->
                 <div id="yearlyStatsBox" class="border rounded-2xl p-3 space-y-2">
                     <div class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5 border-b border-slate-800/80 pb-1.5">
                         <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-blue-400"></i> Estadísticas de Turnos del Año <span id="statsYearLabel">2026</span>
@@ -569,7 +688,7 @@
             </div>
         </main>
 
-        <!-- PANEL DERECHO (Nómina Deslizable y Ocultable) -->
+        <!-- PANEL DERECHO -->
         <aside id="payrollPanel" class="aside payroll-panel-container w-full lg:w-3/12 border border-slate-800 rounded-3xl p-3.5 flex flex-col justify-between space-y-3 shadow-xl h-full overflow-hidden flex-shrink-0">
             <div class="space-y-3">
                 <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
@@ -585,16 +704,24 @@
                     <div class="payroll-box bg-slate-950 p-2 rounded-xl border border-slate-800/80 space-y-0.5">
                         <div class="flex justify-between font-semibold payroll-label text-slate-200 text-[11px]">
                             <span>Base + Complementos:</span>
-                            <span id="valBaseSalaryTotal" class="payroll-val">2.189,54 €</span>
+                            <span id="valBaseSalaryTotal" class="payroll-val">0,00 €</span>
                         </div>
                         <div class="text-[8px] text-slate-500 font-mono font-semibold payroll-subtext" id="valBaseSalaryBreakdown">
-                            (1.961,12€ + 114,13€ + 114,29€)
+                            (0,00€ + 0,00€ + 0,00€)
                         </div>
                     </div>
 
                     <div class="payroll-box bg-slate-950 p-2 rounded-xl border border-slate-800/80 flex justify-between font-semibold payroll-label text-slate-200 text-[11px]">
                         <span>Prorrata Pagas Extras:</span>
-                        <span id="valProrrataExtra" class="text-amber-500 font-bold">365,92 €</span>
+                        <span id="valProrrataExtra" class="text-amber-500 font-bold">0,00 €</span>
+                    </div>
+
+                    <div id="payrollComplementsContainer" class="payroll-box bg-slate-950 p-2 rounded-xl border border-slate-800/80 space-y-1 hidden">
+                        <div class="flex justify-between font-semibold payroll-label text-slate-200 text-[11px]">
+                            <span>Otros Complementos:</span>
+                            <span id="valComplementsTotal" class="payroll-val text-emerald-400 font-bold">0,00 €</span>
+                        </div>
+                        <div id="valComplementsList" class="space-y-0.5 border-t border-slate-800/60 pt-1 text-[9px]"></div>
                     </div>
 
                     <div class="flex justify-between px-1 payroll-label text-slate-300 font-semibold text-[11px]">
@@ -625,7 +752,7 @@
                 </div>
                 <div class="flex justify-between text-rose-400 font-semibold text-[10px]"><span>Seg. Social (4.85%):</span> <span id="valSS" class="font-semibold">0,00 €</span></div>
                 <div class="flex justify-between text-rose-400 font-semibold text-[10px]"><span>Desempleo (1.65%):</span> <span id="valDesempleo" class="font-semibold">0,00 €</span></div>
-                <div class="flex justify-between text-rose-400 font-semibold text-[10px]"><span>IRPF (18%):</span> <span id="valIRPF" class="font-semibold">0,00 €</span></div>
+                <div class="flex justify-between text-rose-400 font-semibold text-[10px]"><span>IRPF (<span id="valIrpfPercent">0</span>%):</span> <span id="valIRPF" class="font-semibold">0,00 €</span></div>
 
                 <div class="border-t border-slate-800 pt-1.5 flex justify-between items-center font-bold text-emerald-400 text-xs">
                     <span>LÍQUIDO NETO:</span>
@@ -637,13 +764,70 @@
     </div>
 
     <!-- MODALES -->
+    <div id="helpModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[80]">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl text-xs max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2 text-blue-400 font-bold text-sm">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                    <span>Guía y Atajos de Teclas</span>
+                </div>
+                <button onclick="closeHelpModal()" class="text-slate-400 hover:text-white transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="space-y-4 text-slate-300">
+                <div class="space-y-1.5">
+                    <h5 class="font-bold text-white text-xs flex items-center gap-1.5"><i data-lucide="mouse-pointer" class="w-4 h-4 text-amber-400"></i> Acciones del Ratón y Atajos</h5>
+                    <ul class="list-disc list-inside space-y-1 pl-1 text-[11px] text-slate-300">
+                        <li><strong class="text-white">Clic Izquierdo:</strong> Selecciona un día, cambia la vista del panel lateral y permite redactar notas personales.</li>
+                        <li><strong class="text-white">Clic Derecho:</strong> Abre el menú contextual del día para asignar turnos y cambiar el tipo de festivo rápidamente.</li>
+                        <li><strong class="text-white">Ctrl / Cmd + Clic:</strong> Permite elegir múltiples días alternos en el calendario.</li>
+                        <li><strong class="text-white">Shift + Clic:</strong> Selecciona un rango de varios días seguidos entre el primer clic y el segundo.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-1.5 border-t border-slate-800 pt-3">
+                    <h5 class="font-bold text-white text-xs flex items-center gap-1.5"><i data-lucide="image" class="w-4 h-4 text-emerald-400"></i> Fotos de Fondo y Parámetros</h5>
+                    <ul class="list-disc list-inside space-y-1 pl-1 text-[11px] text-slate-300">
+                        <li><strong class="text-white">Límite de Turnos:</strong> El sistema permite la configuración de hasta un máximo de 12 turnos personalizados.</li>
+                        <li><strong class="text-white">Parámetros y Complementos de Sueldo:</strong> Ajusta tu Sueldo Base, Plus Carencia, Plus Función, Prorrata, Nocturnidad e IRPF en <strong>Ajustes (<i data-lucide="settings" class="w-3 h-3 inline"></i>)</strong>. Además, puedes añadir o quitar complementos salariales personalizados (positivos o negativos) para ajustar la nómina.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-1.5 border-t border-slate-800 pt-3">
+                    <h5 class="font-bold text-white text-xs flex items-center gap-1.5"><i data-lucide="database" class="w-4 h-4 text-cyan-400"></i> Copias de Seguridad</h5>
+                    <ul class="list-disc list-inside space-y-1 pl-1 text-[11px] text-slate-300">
+                        <li><strong class="text-white">Generación Automática:</strong> Se guardan automáticamente al iniciar sesión, asignar turnos masivamente, aplicar el pack de guardia o borrar un mes completo.</li>
+                        <li><strong class="text-white">Contenido Guardado:</strong> Guardan el estado global del sistema: turnos asignados, notas diarias, configuraciones de usuario, tarifas y parámetros salariales.</li>
+                        <li><strong class="text-white">Restauración:</strong> Puedes consultar y restaurar cualquiera de las últimas 5 copias en el menú de <strong>Ajustes (<i data-lucide="settings" class="w-3 h-3 inline"></i>)</strong>. Requiere la clave de seguridad del administrador.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-1.5 border-t border-slate-800 pt-3">
+                    <h5 class="font-bold text-white text-xs flex items-center gap-1.5"><i data-lucide="layout-grid" class="w-4 h-4 text-indigo-400"></i> Funcionalidades Principales</h5>
+                    <ul class="list-disc list-inside space-y-1 pl-1 text-[11px] text-slate-300">
+                        <li><strong class="text-white">Vistas Mensual y Anual:</strong> Alterna entre visualizar un único mes o todo el año completo con estadísticas agregadas.</li>
+                        <li><strong class="text-white">Pack Guardia:</strong> Asigna automáticamente el patrón de 12 días continuos con un solo clic.</li>
+                        <li><strong class="text-white">Gestión de Turnos:</strong> Crea nuevos turnos, añade o quita sus imágenes de fondo y modifica colores o títulos.</li>
+                        <li><strong class="text-white">Nómina Dinámica:</strong> Desliza o desactiva la barra lateral derecha para calcular en tiempo real tus devengos y deducciones.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800">
+                <button onclick="closeHelpModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-blue-600/30 text-xs">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="loginAlertModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs text-center">
             <div class="inline-flex p-3 bg-amber-500/20 text-amber-400 rounded-2xl">
                 <i data-lucide="alert-circle" class="w-6 h-6"></i>
             </div>
             <h4 class="font-bold text-white text-base">Campo Requerido</h4>
-            <p class="text-slate-400 text-xs">Por favor, introduce tu correo o nombre de usuario para acceder.</p>
+            <p id="loginAlertText" class="text-slate-400 text-xs">Por favor, introduce tu nombre de usuario y contraseña para acceder.</p>
             <button onclick="closeLoginAlertModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-blue-600/30">
                 Entendido
             </button>
@@ -674,12 +858,12 @@
             <p id="confirmDeleteShiftMessage" class="text-slate-400 text-xs">¿Estás seguro de que deseas eliminar este turno?</p>
             <div class="flex gap-2 pt-2">
                 <button onclick="closeConfirmDeleteShiftModal()" class="w-1/2 py-2.5 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 transition font-semibold">Cancelar</button>
-                <button id="btnConfirmDeleteShift" onclick="" class="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition shadow-lg shadow-rose-600/30">Sí, Eliminar</button>
+                <button id="btnConfirmDeleteShift" class="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition shadow-lg shadow-rose-600/30">Sí, Eliminar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Alerta Genérico estilo App -->
+    <!-- Modal de Alerta Genérico -->
     <div id="customAlertModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[60]">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs text-center">
             <div class="inline-flex p-3 bg-amber-500/20 text-amber-400 rounded-2xl">
@@ -690,6 +874,22 @@
             <button onclick="closeCustomAlertModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-blue-600/30">
                 Entendido
             </button>
+        </div>
+    </div>
+
+    <!-- Modal de Contraseña de Administrador -->
+    <div id="adminAuthModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[85]">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs text-center">
+            <div class="inline-flex p-3 bg-amber-500/20 text-amber-400 rounded-2xl">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+            </div>
+            <h4 class="font-bold text-white text-base">Acceso Administrador</h4>
+            <p class="text-slate-400 text-xs">Para restaurar versiones del sistema, introduce la contraseña de seguridad:</p>
+            <input type="password" id="adminPasswordInput" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-center text-white text-sm focus:outline-none focus:border-blue-500" placeholder="PIN / Contraseña">
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeAdminAuthModal()" class="w-1/2 py-2.5 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 transition font-semibold">Cancelar</button>
+                <button onclick="confirmAdminRestore()" class="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-blue-600/30">Confirmar</button>
+            </div>
         </div>
     </div>
 
@@ -723,19 +923,27 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-slate-400 mb-1">Sueldo Base (€):</label>
-                        <input type="number" id="cfgBaseSalary" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                        <input type="number" step="any" id="cfgBaseSalary" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
                     </div>
                     <div>
                         <label class="block text-slate-400 mb-1">Plus Carencia (€):</label>
-                        <input type="number" id="cfgCarencia" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                        <input type="number" step="any" id="cfgCarencia" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
                     </div>
                     <div>
                         <label class="block text-slate-400 mb-1">Plus Función (€):</label>
-                        <input type="number" id="cfgFuncion" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                        <input type="number" step="any" id="cfgFuncion" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Prorrata Extra (€):</label>
+                        <input type="number" step="any" id="cfgProrrataExtra" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Tarifa Noche (€/h):</label>
+                        <input type="number" step="any" id="cfgNightRate" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
                     </div>
                     <div>
                         <label class="block text-slate-400 mb-1">% Retención IRPF:</label>
-                        <input type="number" id="cfgIrpf" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
+                        <input type="number" step="any" id="cfgIrpf" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium">
                     </div>
                 </div>
             </div>
@@ -743,45 +951,20 @@
             <hr class="border-slate-800">
 
             <div class="space-y-3">
-                <div class="font-bold text-slate-400">IMÁGENES DE FONDO DE TURNO</div>
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex-1">
-                            <label class="block text-slate-400 mb-0.5">Fondo Turno Mañana (M):</label>
-                            <input type="file" id="imgUpload_M" accept="image/*" class="w-full text-slate-400 text-[10px] cursor-pointer box-border">
-                        </div>
-                        <button type="button" onclick="removeShiftImage('M')" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Quitar imagen">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex-1">
-                            <label class="block text-slate-400 mb-0.5">Fondo Turno Tarde (T):</label>
-                            <input type="file" id="imgUpload_T" accept="image/*" class="w-full text-slate-400 text-[10px] cursor-pointer box-border">
-                        </div>
-                        <button type="button" onclick="removeShiftImage('T')" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Quitar imagen">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex-1">
-                            <label class="block text-slate-400 mb-0.5">Fondo Turno Noche (N):</label>
-                            <input type="file" id="imgUpload_N" accept="image/*" class="w-full text-slate-400 text-[10px] cursor-pointer box-border">
-                        </div>
-                        <button type="button" onclick="removeShiftImage('N')" class="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Quitar imagen">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
+                <div class="flex justify-between items-center">
+                    <div class="font-bold text-slate-400">COMPLEMENTOS SALARIALES</div>
+                    <button type="button" onclick="addNewComplementInput()" class="text-blue-400 hover:text-blue-300 text-[11px] font-bold flex items-center gap-1">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Añadir
+                    </button>
                 </div>
+                <div id="complementsList" class="space-y-2"></div>
             </div>
 
             <hr class="border-slate-800">
 
             <div class="space-y-3">
                 <div class="font-bold text-slate-400">COPIAS DE SEGURIDAD</div>
-                <div id="backupsList" class="space-y-1.5 max-h-32 overflow-y-auto p-2 bg-slate-950 rounded-xl border border-slate-800"></div>
+                <div id="backupsList" class="space-y-1.5 max-h-36 overflow-y-auto p-2 bg-slate-950 rounded-xl border border-slate-800"></div>
             </div>
 
             <div class="flex gap-2 pt-2">
@@ -791,44 +974,55 @@
         </div>
     </div>
 
+    <!-- PANEL DE GESTIÓN DE TURNOS -->
     <div id="customShiftModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-xs">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h4 class="font-bold text-white">Gestión de Turnos</h4>
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-2xl w-full space-y-4 shadow-2xl text-xs max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2 flex-shrink-0">
+                <h4 class="font-bold text-white text-sm">Gestión de Turnos</h4>
                 <button onclick="closeCustomShiftModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
 
-            <!-- SECCIÓN: EDITAR / BORRAR TURNOS EXISTENTES -->
-            <div class="space-y-2">
-                <label class="block text-slate-400 font-bold">Modificar / Borrar Turnos Existentes:</label>
-                <div id="existingShiftsColorList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            <div class="overflow-y-auto pr-1 space-y-4 flex-1">
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-slate-400 font-bold">Modificar / Borrar Turnos Existentes:</label>
+                        <span id="shiftBgLimitInfo" class="text-[10px] text-slate-400 font-semibold">Turnos configurados: <strong id="shiftBgCount" class="text-blue-400">0</strong>/12</span>
+                    </div>
+                    <div id="existingShiftsColorList" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+                </div>
+
+                <hr class="border-slate-800">
+
+                <div class="space-y-3">
+                    <label class="block text-slate-400 font-bold">Agregar Nuevo Turno:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Código del Turno (Título):</label>
+                            <input type="text" id="newShiftCode" maxlength="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white uppercase font-bold" placeholder="M1">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Nombre Completo del Turno:</label>
+                            <input type="text" id="newShiftName" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium" placeholder="M1 - Mañana Especial">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 items-end">
+                        <div>
+                            <label class="block text-slate-400 mb-1">Fondo:</label>
+                            <input type="color" id="newShiftBg" value="#3b82f6" class="w-full h-8 bg-transparent rounded cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1">Borde:</label>
+                            <input type="color" id="newShiftBd" value="#1d4ed8" class="w-full h-8 bg-transparent rounded cursor-pointer">
+                        </div>
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block text-slate-400 mb-1">Foto de Fondo (Opcional):</label>
+                            <input type="file" id="newShiftImg" accept="image/*" class="w-full text-slate-400 text-[10px] cursor-pointer box-border">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <hr class="border-slate-800">
-
-            <!-- SECCIÓN: CREAR NUEVO TURNO -->
-            <div class="space-y-3">
-                <label class="block text-slate-400 font-bold">Agregar Nuevo Turno:</label>
-                <div>
-                    <label class="block text-slate-400 mb-1">Código del Turno (Título):</label>
-                    <input type="text" id="newShiftCode" maxlength="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white uppercase font-bold" placeholder="M1">
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Nombre Completo del Turno:</label>
-                    <input type="text" id="newShiftName" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium" placeholder="M1 - Mañana Especial">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Fondo:</label>
-                        <input type="color" id="newShiftBg" value="#3b82f6" class="w-full h-8 bg-transparent rounded cursor-pointer">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Borde:</label>
-                        <input type="color" id="newShiftBd" value="#1d4ed8" class="w-full h-8 bg-transparent rounded cursor-pointer">
-                    </div>
-                </div>
-            </div>
-            <div class="flex gap-2 pt-2">
+            <div class="flex gap-2 pt-2 border-t border-slate-800 flex-shrink-0">
                 <button onclick="closeCustomShiftModal()" class="w-1/2 py-2 border border-slate-700 rounded-xl text-slate-400">Cancelar</button>
                 <button onclick="confirmAddShift()" class="w-1/2 py-2 bg-blue-600 text-white rounded-xl font-bold">Crear Turno</button>
             </div>
@@ -842,9 +1036,9 @@
                 <button onclick="closeAddUserModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="space-y-2">
-                <label class="block text-slate-400">Nombre:</label>
+                <label class="block text-slate-400">Nombre *:</label>
                 <input type="text" id="newUserName" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white">
-                <label class="block text-slate-400">Correo Electrónico:</label>
+                <label class="block text-slate-400">Correo Electrónico (Opcional):</label>
                 <input type="email" id="newUserMail" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-white">
             </div>
             <div class="flex gap-2 pt-2">
@@ -854,48 +1048,133 @@
         </div>
     </div>
 
+    <!-- PANEL DEL CLIC DERECHO / MENÚ DE DÍA -->
     <div id="dayModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-xs">
-            <h4 id="modalTitle" class="font-bold text-center border-b border-slate-800 pb-2 text-white">Editar Día</h4>
-            <div class="space-y-2">
-                <label class="block text-slate-400 font-medium">Turno Asignado:</label>
-                <select id="modalShift" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer"></select>
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-5 shadow-2xl text-xs max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
+                <h4 id="modalTitle" class="font-bold text-white text-base">Editar Día</h4>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <div class="space-y-2">
-                <label class="block text-slate-400 font-medium">Tipo de Día:</label>
-                <select id="modalDayType" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer">
-                    <option value="auto">Automático</option>
-                    <option value="festivo">Festivo Oficial</option>
-                    <option value="especial">Festivo Especial</option>
-                </select>
+            
+            <div class="space-y-5 overflow-y-auto pr-1 flex-1 py-1">
+                <div class="space-y-2">
+                    <label class="block text-slate-300 font-bold text-xs">Turno Asignado:</label>
+                    <select id="modalShift" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer text-sm"></select>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-slate-300 font-bold text-xs">Tipo de Día / Calendario:</label>
+                    <select id="modalDayType" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer text-sm">
+                        <option value="auto">Automático (Según día de semana)</option>
+                        <option value="festivo">Festivo Oficial</option>
+                        <option value="especial">Festivo Especial</option>
+                    </select>
+                </div>
             </div>
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="clearSingleDay()" class="w-1/3 py-2.5 bg-rose-500/20 text-rose-400 rounded-xl font-semibold hover:bg-rose-500/30 transition text-center">Borrar</button>
-                <button type="button" onclick="closeModal()" class="w-1/3 py-2.5 border border-slate-700 rounded-xl text-slate-400 hover:bg-slate-800 transition text-center">Cancelar</button>
-                <button type="button" onclick="saveModal()" class="w-1/3 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 text-center">Guardar</button>
+
+            <div class="flex gap-3 pt-3 border-t border-slate-800 flex-shrink-0">
+                <button type="button" onclick="clearSingleDay()" class="w-1/3 py-3 bg-rose-500/20 text-rose-400 rounded-xl font-bold hover:bg-rose-500/30 transition text-center text-xs">Borrar Turno</button>
+                <button type="button" onclick="closeModal()" class="w-1/3 py-3 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 transition text-center font-semibold text-xs">Cancelar</button>
+                <button type="button" onclick="saveModal()" class="w-1/3 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-600/30 text-center text-xs">Guardar Cambios</button>
             </div>
         </div>
     </div>
 
     <script>
+        // CONFIGURACIÓN DE FIREBASE (Reemplaza con tus llaves reales de Firebase Console)
+	// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+	const firebaseConfig = {
+	  apiKey: "AIzaSyAvcqxV9UTRyJLQHD6r7rUqikB53WskTdQ",
+	  authDomain: "payshift-0.firebaseapp.com",
+	  projectId: "payshift-0",
+	  storageBucket: "payshift-0.firebasestorage.app",
+	  messagingSenderId: "905065765221",
+	  appId: "1:905065765221:web:b47a3a4ce145b9e855698c",
+	  measurementId: "G-W9PZRNGXQF"
+	};
+        
+        // Inicializar Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
         const CURRENT_APP_VERSION = "v1.4.3";
+        const MAX_CUSTOM_SHIFTS = 12;
+        const ADMIN_RESTORE_PASSWORD = "450855";
+        let pendingRestoreIndex = null;
+
         let currentDate = new Date(2026, 8, 8);
         let selectedDayKey = '2026-09-08';
         let currentView = 'month';
         let currentUserEmail = null;
+        let userEncryptionKey = null; // Llave basada en la contraseña del usuario
         let isGuardPlacementMode = false;
         let isDarkMode = true;
         let isPayrollVisible = true;
+        let isRegisteringMode = false;
 
         let selectionAnchor = null;
         let selectedKeys = [];
 
         let tempAvatarData = null;
         let deletedAvatar = false;
-        let deletedShiftImages = {};
 
-        let appData = JSON.parse(localStorage.getItem('appData_v6') || '{}');
-        let backupsHistory = JSON.parse(localStorage.getItem('appBackupsHistory') || '[]');
+        let appData = {};
+        let backupsHistory = [];
+
+        // Función de utilidad para derivar Hash/Cifrado
+        function hashPassword(password) {
+            return CryptoJS.SHA256(password).toString();
+        }
+
+        // Generar un ID Único basado en el nombre de usuario
+        function generateUniqueUserId(username) {
+            const cleanUser = username.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+            const hash = CryptoJS.MD5(cleanUser).toString().substring(0, 8);
+            return `usr_${cleanUser}_${hash}`;
+        }
+
+        // Guardado cifrado en LocalStorage
+        function saveEncryptedLocalStorage() {
+            if (!userEncryptionKey) return;
+            try {
+                const encryptedData = CryptoJS.AES.encrypt(JSON.stringify(appData), userEncryptionKey).toString();
+                localStorage.setItem('appData_v6_encrypted', encryptedData);
+                
+                const encryptedBackups = CryptoJS.AES.encrypt(JSON.stringify(backupsHistory), userEncryptionKey).toString();
+                localStorage.setItem('appBackupsHistory_encrypted', encryptedBackups);
+            } catch (e) {
+                console.warn("Error cifrando en localStorage:", e);
+            }
+        }
+
+        // Carga y descifrado de LocalStorage
+        function loadDecryptedLocalStorage() {
+            if (!userEncryptionKey) return false;
+            try {
+                const encryptedData = localStorage.getItem('appData_v6_encrypted');
+                if (encryptedData) {
+                    const bytes = CryptoJS.AES.decrypt(encryptedData, userEncryptionKey);
+                    const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+                    if (decryptedText) {
+                        appData = JSON.parse(decryptedText);
+                    }
+                }
+
+                const encryptedBackups = localStorage.getItem('appBackupsHistory_encrypted');
+                if (encryptedBackups) {
+                    const bytesB = CryptoJS.AES.decrypt(encryptedBackups, userEncryptionKey);
+                    const decryptedBText = bytesB.toString(CryptoJS.enc.Utf8);
+                    if (decryptedBText) {
+                        backupsHistory = JSON.parse(decryptedBText);
+                    }
+                }
+                return true;
+            } catch (e) {
+                console.error("Error al descifrar localStorage:", e);
+                return false;
+            }
+        }
 
         let shiftFullNames = JSON.parse(localStorage.getItem('appShiftNames') || 'null') || {
             M: "M - Mañana",
@@ -915,7 +1194,7 @@
             localStorage.setItem('appShiftNames', JSON.stringify(shiftFullNames));
         }
 
-        let defaultColors = {
+        const defaultColors = {
             M: { bg: '#38bdf8', text: '#000000', border: '#0284c7' },
             T: { bg: '#fb923c', text: '#000000', border: '#f97316' },
             N: { bg: '#4338ca', text: '#ffffff', border: '#3730a3' },
@@ -935,52 +1214,295 @@
         const GUARDIA_INTERVENCION = { 1: 52.35, 2: 104.71, 3: 157.06, 4: 209.41, 5: 261.77, 6: 314.12 };
 
         function init() {
-            createAutoBackup(`Inicio de sesión (${CURRENT_APP_VERSION})`);
-            
             const yearElem = document.getElementById('copyrightYearText');
             if (yearElem) {
                 yearElem.innerText = `© Peio Oraa ${new Date().getFullYear()}`;
             }
 
-            const savedUser = localStorage.getItem('activeUserSession');
-            if (savedUser && appData[savedUser]) {
-                currentUserEmail = savedUser;
-                showAppLayout();
-            } else {
-                document.getElementById('authScreen').classList.remove('hidden');
-            }
+            document.getElementById('authScreen').classList.remove('hidden');
             lucide.createIcons();
         }
 
+        function toggleAuthMode() {
+            isRegisteringMode = !isRegisteringMode;
+            const title = document.getElementById('authTitle');
+            const subtitle = document.getElementById('authSubtitle');
+            const primaryBtn = document.getElementById('authPrimaryBtn');
+            const toggleBtn = document.getElementById('authToggleBtn');
+            const emailContainer = document.getElementById('emailContainer');
+
+            if (isRegisteringMode) {
+                title.innerText = "Registro de Usuario";
+                subtitle.innerText = "Crea una nueva cuenta para comenzar";
+                primaryBtn.innerText = "Registrar Cuenta";
+                toggleBtn.innerText = "¿Ya tienes cuenta? Inicia sesión aquí";
+                emailContainer.classList.remove('hidden');
+            } else {
+                title.innerText = "Control de Turnos";
+                subtitle.innerText = "Introduce tus datos para acceder";
+                primaryBtn.innerText = "Acceder a la Aplicación";
+                toggleBtn.innerText = "¿Usuario nuevo? Regístrate aquí";
+                emailContainer.classList.add('hidden');
+            }
+        }
+
+async function handleAuthAction() {
+    const nameInput = document.getElementById('authName').value.trim();
+    const passwordInput = document.getElementById('authPassword').value;
+    const emailInput = document.getElementById('authEmail').value.trim();
+
+    if (!nameInput || !passwordInput) {
+        openLoginAlertModal("Por favor, introduce tu usuario y contraseña.");
+        return;
+    }
+
+    try {
+        if (isRegisteringMode) {
+            // 1. Definir correo (si es opcional/vacío, se crea uno interno)
+            const userEmailForAuth = emailInput !== "" 
+                ? emailInput 
+                : `${nameInput.toLowerCase().replace(/[^a-z0-9]/g, '')}@tuapp.internal`;
+
+            // 2. Registrar en Firebase Auth
+            const userCredential = await firebase.auth().createUserWithEmailAndPassword(userEmailForAuth, passwordInput);
+            const authUser = userCredential.user;
+
+            currentUserEmail = authUser.uid; // El UID de Firebase Auth coincide con el userId de tus reglas
+            userEncryptionKey = hashPassword(passwordInput);
+
+            // 3. Crear documento en Firestore bajo la colección /user/{userId}
+            const userRef = db.collection('user').doc(authUser.uid);
+            await userRef.set({
+                uid: authUser.uid,
+                username: nameInput,
+                email: emailInput,
+                authEmail: userEmailForAuth,
+                createdAt: new Date().toISOString()
+            });
+
+            appData[currentUserEmail] = createNewUserObj(nameInput, emailInput);
+            saveData();
+
+            document.getElementById('authScreen').classList.add('hidden');
+            openSetupPayrollModal();
+
+        } else {
+            // Modo Login: Determinar si ingresó un correo o un nombre de usuario
+            let loginEmail = nameInput;
+            if (!nameInput.includes('@')) {
+                // Si es un nombre de usuario, deducimos su correo interno o lo buscamos
+                loginEmail = `${nameInput.toLowerCase().replace(/[^a-z0-9]/g, '')}@tuapp.internal`;
+            }
+
+            // Iniciar sesión en Firebase Auth
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(loginEmail, passwordInput);
+            const authUser = userCredential.user;
+
+            currentUserEmail = authUser.uid;
+            userEncryptionKey = hashPassword(passwordInput);
+
+            // Obtener datos complementarios desde Firestore
+            const userRef = db.collection('user').doc(authUser.uid);
+            const docSnap = await userRef.get();
+
+            let username = nameInput;
+            let storedEmail = "";
+            if (docSnap.exists) {
+                username = docSnap.data().username || nameInput;
+                storedEmail = docSnap.data().email || "";
+            }
+
+            const loadSuccess = loadDecryptedLocalStorage();
+            if (!loadSuccess || !appData[currentUserEmail]) {
+                appData[currentUserEmail] = createNewUserObj(username, storedEmail);
+            } else {
+                appData[currentUserEmail].name = username;
+                if (storedEmail) appData[currentUserEmail].email = storedEmail;
+            }
+
+            saveData();
+            createAutoBackup(`Inicio de sesión (${CURRENT_APP_VERSION})`);
+
+            if (!appData[currentUserEmail].isPayrollConfigured) {
+                document.getElementById('authScreen').classList.add('hidden');
+                openSetupPayrollModal();
+            } else {
+                showAppLayout();
+            }
+        }
+    } catch (err) {
+    console.error("Código de error real de Firebase:", err.code); // <-- Añade esto para depurar
+    
+    let errorMsg = "Ocurrió un error al autenticar.";
+    
+    if (
+        err.code === 'auth/wrong-password' || 
+        err.code === 'auth/user-not-found' || 
+        err.code === 'auth/invalid-credential' ||
+        err.code === 'auth/invalid-login-credentials' // <-- Añadido por compatibilidad moderna
+    ) {
+        errorMsg = "Usuario/correo o contraseña incorrectos.";
+    } else if (err.code === 'auth/email-already-in-use') {
+        errorMsg = "Este correo o nombre de usuario ya se encuentra registrado.";
+    } else if (err.code === 'auth/weak-password') {
+        errorMsg = "La contraseña debe tener al menos 6 caracteres.";
+    }
+    
+    openCustomAlertModal("Error de Acceso", errorMsg);
+      }
+}
+
+async function handleGoogleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+        // 1. Abrir ventana emergente de Google
+        const result = await firebase.auth().signInWithPopup(provider);
+        const authUser = result.user;
+
+        currentUserEmail = authUser.uid;
+        
+        // 2. Como Google no provee contraseña en texto plano, generamos una llave 
+        // de cifrado estable basada en su UID único para mantener el LocalStorage cifrado.
+        userEncryptionKey = hashPassword(authUser.uid + "_google_secure_salt_2026");
+
+        // 3. Verificar si el usuario ya existe en Firestore
+        const userRef = db.collection('user').doc(authUser.uid);
+        const docSnap = await userRef.get();
+
+        if (!docSnap.exists) {
+            // Si es su primera vez, creamos su documento en Firestore
+            await userRef.set({
+                uid: authUser.uid,
+                username: authUser.displayName || "Usuario Google",
+                email: authUser.email || "",
+                authEmail: authUser.email || "",
+                createdAt: new Date().toISOString()
+            });
+
+            appData[currentUserEmail] = createNewUserObj(authUser.displayName || "Usuario", authUser.email || "");
+            saveData();
+
+            document.getElementById('authScreen').classList.add('hidden');
+            openSetupPayrollModal(); // Configuración inicial de sueldo para usuarios nuevos
+
+        } else {
+            // Si ya existe, recuperamos sus datos
+            let username = docSnap.data().username || authUser.displayName || "Usuario";
+            let storedEmail = docSnap.data().email || authUser.email || "";
+
+            const loadSuccess = loadDecryptedLocalStorage();
+            if (!loadSuccess || !appData[currentUserEmail]) {
+                appData[currentUserEmail] = createNewUserObj(username, storedEmail);
+            } else {
+                appData[currentUserEmail].name = username;
+                if (storedEmail) appData[currentUserEmail].email = storedEmail;
+            }
+
+            saveData();
+            createAutoBackup(`Inicio con Google (${CURRENT_APP_VERSION})`);
+
+            // Validar si ya configuró su nómina anteriormente
+            if (!appData[currentUserEmail].isPayrollConfigured) {
+                document.getElementById('authScreen').classList.add('hidden');
+                openSetupPayrollModal();
+            } else {
+                showAppLayout();
+            }
+        }
+
+    } catch (err) {
+        console.error("Error en Google Sign-In:", err);
+        let errorMsg = "No se pudo completar el inicio de sesión con Google.";
+        if (err.code === 'auth/popup-closed-by-user') {
+            errorMsg = "Has cerrado la ventana de inicio de sesión.";
+        }
+        openCustomAlertModal("Error de Acceso", errorMsg);
+    }
+}
+
         window.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' || event.key === 'Esc') {
-                closeModal();
-                closeSettingsModal();
-                closeCustomShiftModal();
-                closeAddUserModal();
-                closeConfirmClearMonthModal();
-                closeConfirmDeleteShiftModal();
-                closeCustomAlertModal();
-                closeLoginAlertModal();
+                if (selectedKeys.length > 0) {
+                    clearRangeSelection();
+                } else {
+                    closeModal();
+                    closeSettingsModal();
+                    closeCustomShiftModal();
+                    closeAddUserModal();
+                    closeConfirmClearMonthModal();
+                    closeConfirmDeleteShiftModal();
+                    closeCustomAlertModal();
+                    closeLoginAlertModal();
+                    closeHelpModal();
+                    closeAdminAuthModal();
+                }
             }
         });
 
-        function handleLogin() {
-            const email = document.getElementById('authEmail').value.toLowerCase().trim();
-            if (!email) {
-                openLoginAlertModal();
-                return;
+        function openSetupPayrollModal() {
+            document.getElementById('initBaseSalary').value = '';
+            document.getElementById('initCarencia').value = '';
+            document.getElementById('initFuncion').value = '';
+            document.getElementById('initProrrataExtra').value = '';
+            document.getElementById('initNightRate').value = '';
+            document.getElementById('initIrpf').value = '';
+            document.getElementById('setupPayrollWarning').classList.add('hidden');
+            document.getElementById('setupPayrollModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function parseSalaryValue(val, showWarningRef) {
+            val = val.trim().replace(',', '.');
+            if (val === '') return 0;
+            const parsed = parseFloat(val);
+            if (isNaN(parsed)) {
+                showWarningRef.hasInvalid = true;
+                return 0;
             }
-            if (!appData[email]) {
-                appData[email] = createNewUserObj(email.split('@')[0], email);
+            return parsed;
+        }
+
+        function confirmSetupPayroll() {
+            const warningRef = { hasInvalid: false };
+            
+            const baseSalary = parseSalaryValue(document.getElementById('initBaseSalary').value, warningRef);
+            const carencia = parseSalaryValue(document.getElementById('initCarencia').value, warningRef);
+            const funcion = parseSalaryValue(document.getElementById('initFuncion').value, warningRef);
+            const prorrataExtra = parseSalaryValue(document.getElementById('initProrrataExtra').value, warningRef);
+            const nightRate = parseSalaryValue(document.getElementById('initNightRate').value, warningRef);
+            const irpf = parseSalaryValue(document.getElementById('initIrpf').value, warningRef);
+
+            if (warningRef.hasInvalid) {
+                document.getElementById('setupPayrollWarning').classList.remove('hidden');
+                lucide.createIcons();
+                setTimeout(() => {
+                    completeSetupPayroll(baseSalary, carencia, funcion, prorrataExtra, nightRate, irpf);
+                }, 2000);
+            } else {
+                completeSetupPayroll(baseSalary, carencia, funcion, prorrataExtra, nightRate, irpf);
             }
-            currentUserEmail = email;
-            localStorage.setItem('activeUserSession', currentUserEmail);
+        }
+
+        function completeSetupPayroll(baseSalary, carencia, funcion, prorrataExtra, nightRate, irpf) {
+            const u = getUser();
+            u.config = {
+                baseSalary: baseSalary,
+                carencia: carencia,
+                funcion: funcion,
+                prorrataExtra: prorrataExtra,
+                nightRate: nightRate,
+                irpf: irpf
+            };
+            u.isPayrollConfigured = true;
             saveData();
+            document.getElementById('setupPayrollModal').classList.add('hidden');
             showAppLayout();
         }
 
-        function openLoginAlertModal() { document.getElementById('loginAlertModal').classList.remove('hidden'); }
+        function openLoginAlertModal(msg) { 
+            if(msg) document.getElementById('loginAlertText').innerText = msg;
+            document.getElementById('loginAlertModal').classList.remove('hidden'); 
+        }
         function closeLoginAlertModal() { document.getElementById('loginAlertModal').classList.add('hidden'); }
 
         function openCustomAlertModal(title, message) {
@@ -1008,50 +1530,62 @@
         }
 
         function handleLogout() {
-            localStorage.removeItem('activeUserSession');
+            currentUserEmail = null;
+            userEncryptionKey = null;
+            appData = {};
+            backupsHistory = [];
             location.reload();
         }
 
         function createNewUserObj(name, email) {
             return {
                 name: name,
-                email: email,
+                email: email || '',
                 avatar: null,
                 shifts: {},
                 notes: {},
                 customImages: {},
                 colors: JSON.parse(JSON.stringify(defaultColors)),
-                config: { baseSalary: 1961.12, carencia: 114.13, funcion: 114.29, nightRate: 3.616962, irpf: 18 }
+                config: { baseSalary: 0, carencia: 0, funcion: 0, prorrataExtra: 0, nightRate: 0, irpf: 0, complements: [] },
+                isPayrollConfigured: false,
+                hasSeenHelp: false
             };
         }
 
         function getUser() {
             if (!appData[currentUserEmail]) {
-                appData[currentUserEmail] = createNewUserObj('Usuario', currentUserEmail);
+                appData[currentUserEmail] = createNewUserObj('Usuario', currentUserEmail.includes('@') ? currentUserEmail : '');
             }
-            // Asegurar que turnos nuevos F y AC existan en usuarios antiguos
             if (!appData[currentUserEmail].colors) {
                 appData[currentUserEmail].colors = JSON.parse(JSON.stringify(defaultColors));
             } else {
                 if (!appData[currentUserEmail].colors.F) appData[currentUserEmail].colors.F = defaultColors.F;
                 if (!appData[currentUserEmail].colors.AC) appData[currentUserEmail].colors.AC = defaultColors.AC;
             }
+            if (!appData[currentUserEmail].customImages) {
+                appData[currentUserEmail].customImages = {};
+            }
+            if (!appData[currentUserEmail].config) {
+                appData[currentUserEmail].config = { baseSalary: 0, carencia: 0, funcion: 0, prorrataExtra: 0, nightRate: 0, irpf: 0, complements: [] };
+            }
+            if (!appData[currentUserEmail].config.complements) {
+                appData[currentUserEmail].config.complements = [];
+            }
             return appData[currentUserEmail];
         }
 
         function saveData() {
             try {
-                localStorage.setItem('appData_v6', JSON.stringify(appData));
+                saveEncryptedLocalStorage();
             } catch (e) {
-                console.warn("Error de cuota de localStorage. Intentando liberar espacio de backups antiguos...", e);
+                console.warn("Error de cuota de localStorage. Intentando liberar espacio...", e);
                 if (backupsHistory.length > 2) {
                     backupsHistory = backupsHistory.slice(0, 2);
-                    localStorage.setItem('appBackupsHistory', JSON.stringify(backupsHistory));
                 }
                 try {
-                    localStorage.setItem('appData_v6', JSON.stringify(appData));
+                    saveEncryptedLocalStorage();
                 } catch (err) {
-                    openCustomAlertModal("Almacenamiento Lleno", "El almacenamiento local está lleno. Por favor quita alguna imagen de fondo para liberar espacio.");
+                    openCustomAlertModal("Almacenamiento Lleno", "El almacenamiento local está lleno. Por favor libera espacio.");
                 }
             }
         }
@@ -1066,7 +1600,7 @@
                 };
                 backupsHistory.unshift(backup);
                 if (backupsHistory.length > 5) backupsHistory = backupsHistory.slice(0, 5);
-                localStorage.setItem('appBackupsHistory', JSON.stringify(backupsHistory));
+                saveEncryptedLocalStorage();
             } catch (e) {
                 console.warn("No se pudo crear backup secundario por espacio.", e);
             }
@@ -1074,23 +1608,31 @@
 
         function toggleDarkMode() {
             isDarkMode = !isDarkMode;
-            const html = document.documentElement;
-            const icon = document.getElementById('themeIcon');
+            document.documentElement.classList.toggle('dark', isDarkMode);
+
+            const base = document.getElementById('themeIconBase');
+            const hover = document.getElementById('themeIconHover');
+
             if (isDarkMode) {
-                html.classList.add('dark');
-                icon.setAttribute('data-lucide', 'sun');
+                base.setAttribute('data-lucide', 'moon');
+                base.setAttribute('class', 'w-4 h-4 text-slate-300 absolute transition-all duration-300 transform scale-100 rotate-0 opacity-100 group-hover:scale-0 group-hover:rotate-90 group-hover:opacity-0');
+                
+                hover.setAttribute('data-lucide', 'sun');
+                hover.setAttribute('class', 'w-4 h-4 text-amber-400 absolute transition-all duration-300 transform scale-0 -rotate-90 opacity-0 group-hover:scale-100 group-hover:rotate-0 group-hover:opacity-100');
             } else {
-                html.classList.remove('dark');
-                icon.setAttribute('data-lucide', 'moon');
+                base.setAttribute('data-lucide', 'sun');
+                base.setAttribute('class', 'w-4 h-4 text-amber-400 absolute transition-all duration-300 transform scale-100 rotate-0 opacity-100 group-hover:scale-0 group-hover:rotate-90 group-hover:opacity-0');
+                
+                hover.setAttribute('data-lucide', 'moon');
+                hover.setAttribute('class', 'w-4 h-4 text-slate-300 absolute transition-all duration-300 transform scale-0 -rotate-90 opacity-0 group-hover:scale-100 group-hover:rotate-0 group-hover:opacity-100');
             }
-            lucide.createIcons();
+
+            if (window.lucide) lucide.createIcons();
+
             switchView(currentView);
-            if (currentView === 'year') {
-                renderYearlyView();
-            }
+            if (currentView === 'year') renderYearlyView();
         }
 
-        /* ALTERNAR OCULTAR/MOSTRAR PANEL DE NÓMINA CON ANIMACIÓN DE DESLIZAMIENTO */
         function togglePayrollPanel() {
             isPayrollVisible = !isPayrollVisible;
             const payroll = document.getElementById('payrollPanel');
@@ -1109,17 +1651,39 @@
             lucide.createIcons();
         }
 
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+
         function showAppLayout() {
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('appLayout').classList.remove('hidden');
             const u = getUser();
             document.getElementById('sideUserName').innerText = u.name;
-            document.getElementById('sideUserMail').innerText = u.email;
+            
+            const mailElem = document.getElementById('sideUserMail');
+            if (u.email && u.email.trim().length > 0) {
+                mailElem.innerText = u.email;
+                mailElem.classList.remove('hidden');
+            } else {
+                mailElem.classList.add('hidden');
+            }
             
             updateAvatarUI();
             renderCalendar();
             updateSidebar();
             switchView(currentView);
+
+            if (!u.hasSeenHelp) {
+                u.hasSeenHelp = true;
+                saveData();
+                openHelpModal();
+            }
         }
 
         function updateAvatarUI() {
@@ -1140,10 +1704,7 @@
             const btnMonth = document.getElementById('btnViewMonth');
             const btnYear = document.getElementById('btnViewYear');
 
-            const activeClasses = isDarkMode
-                ? "bg-blue-600 text-white border-blue-500 shadow-sm font-bold"
-                : "bg-blue-600 text-white border-blue-600 shadow-sm font-bold";
-
+            const activeClasses = "bg-blue-600 text-white border-blue-500 shadow-sm font-bold";
             const inactiveClasses = isDarkMode
                 ? "text-slate-400 hover:text-white border-transparent bg-transparent"
                 : "text-slate-600 hover:text-slate-900 border-transparent bg-transparent";
@@ -1212,13 +1773,18 @@
                 if (dayType === 'especial') bgClass = 'bg-purple-950/20';
 
                 const isToday = (dateKey === todayStr);
+                const isSelectedDay = (dateKey === selectedDayKey);
                 const isSelectedRange = selectedKeys.includes(dateKey);
                 
                 const isGuardDay = ['G', 'MG', 'NG'].includes(shift);
                 const guardClass = isGuardDay ? 'guard-border-subtle' : '';
 
                 const dayCell = document.createElement('div');
-                dayCell.className = `calendar-day-cell aspect-square border border-slate-800 rounded-2xl p-1.5 flex flex-col justify-between cursor-pointer transition-all ${bgClass} ${isSelectedRange ? 'day-selected-range' : ''} ${guardClass}`;
+                let cellClasses = `calendar-day-cell aspect-square border border-slate-800 rounded-2xl p-1.5 flex flex-col justify-between cursor-pointer transition-all ${bgClass} ${guardClass}`;
+                if (isSelectedRange) cellClasses += ' day-selected-range';
+                if (isSelectedDay && !isSelectedRange) cellClasses += ' day-selected-single';
+
+                dayCell.className = cellClasses;
                 
                 dayCell.onmousedown = (e) => { if (e.shiftKey) e.preventDefault(); };
 
@@ -1228,6 +1794,7 @@
                     e.preventDefault();
                     selectedDayKey = dateKey;
                     updateSidebar();
+                    renderCalendar();
                     openModal(dateKey, day);
                 };
 
@@ -1286,8 +1853,8 @@
 
                 if (isOtherMonth) {
                     currentDate = new Date(clickDate.getFullYear(), clickDate.getMonth(), 1);
-                    renderCalendar();
                 }
+                renderCalendar();
             }
         }
 
@@ -1402,15 +1969,19 @@
                 overlay.classList.add('hidden');
             }
 
-            let baseShift = shift.replace('G', '');
-            if (u.customImages && u.customImages[baseShift]) {
-                bgBox.style.backgroundImage = `url('${u.customImages[baseShift]}')`;
+            if (u.customImages && u.customImages[shift]) {
+                bgBox.style.backgroundImage = `url('${u.customImages[shift]}')`;
             } else {
-                bgBox.style.backgroundImage = 'none';
-                if (baseShift === 'M') bgBox.classList.add('sidebar-bg-M');
-                else if (baseShift === 'T') bgBox.classList.add('sidebar-bg-T');
-                else if (baseShift === 'N') bgBox.classList.add('sidebar-bg-N');
-                else bgBox.classList.add('sidebar-bg-default');
+                let baseShift = shift.replace('G', '');
+                if (u.customImages && u.customImages[baseShift]) {
+                    bgBox.style.backgroundImage = `url('${u.customImages[baseShift]}')`;
+                } else {
+                    bgBox.style.backgroundImage = 'none';
+                    if (baseShift === 'M') bgBox.classList.add('sidebar-bg-M');
+                    else if (baseShift === 'T') bgBox.classList.add('sidebar-bg-T');
+                    else if (baseShift === 'N') bgBox.classList.add('sidebar-bg-N');
+                    else bgBox.classList.add('sidebar-bg-default');
+                }
             }
         }
 
@@ -1463,6 +2034,7 @@
                     const hasNotes = u.notes && u.notes[k] && u.notes[k].trim().length > 0;
                     
                     const isToday = (k === todayStr);
+                    const isSelectedDay = (k === selectedDayKey);
                     const isGuardDay = ['G', 'MG', 'NG'].includes(shift);
                     
                     let dayStyle = isDarkMode 
@@ -1476,11 +2048,15 @@
 
                     let dayExtraClass = '';
                     if (isGuardDay) dayExtraClass += ' border border-amber-500/80';
-                    if (isToday) dayExtraClass += ' ring-2 ring-blue-500 font-extrabold text-blue-400';
+                    if (isToday) {
+                        dayExtraClass += ' ring-2 ring-blue-500 font-extrabold text-blue-400';
+                    } else if (isSelectedDay) {
+                        dayExtraClass += ' ring-2 ring-amber-400 font-extrabold text-amber-400';
+                    }
 
                     miniDaysHtml += `
                         <div class="text-[9px] rounded-sm text-center py-0.5 relative cursor-pointer ${dayExtraClass}" 
-                             style="${!isToday ? dayStyle : ''}"
+                             style="${(!isToday && !isSelectedDay) ? dayStyle : ''}"
                              onclick="handleYearlyDayClick('${k}', event)"
                              oncontextmenu="handleYearlyDayContextMenu('${k}', ${d}, event)">
                             ${d}
@@ -1503,7 +2079,6 @@
             renderYearlyStats();
         }
 
-        /* 2. CÁLCULO Y RENDERIZADO DE LAS ESTADÍSTICAS ANUALES */
         function renderYearlyStats() {
             const u = getUser();
             const year = currentDate.getFullYear();
@@ -1533,7 +2108,7 @@
                 if (totalCount === 0) {
                     return `<span class="text-[10px] text-slate-500 italic">Sin turnos asignados</span>`;
                 }
-                let html = `<span class="bg-blue-600/30 text-blue-300 border border-blue-500/40 text-[10px] font-black px-2 py-0.5 rounded-lg mr-1">TOTAL: ${totalCount}</span>`;
+                let html = `<span class="bg-blue-600/30 border border-blue-500/40 text-[10px] font-black px-2 py-0.5 rounded-lg mr-1">TOTAL: ${totalCount}</span>`;
                 Object.keys(countsObj).sort().forEach(code => {
                     const c = (u.colors && u.colors[code]) ? u.colors[code] : defaultColors[code] || { bg: '#475569', text: '#ffffff', border: '#64748b' };
                     html += `
@@ -1563,6 +2138,7 @@
 
             updateSidebar();
             renderCalendar();
+            renderYearlyView();
         }
 
         function handleYearlyDayContextMenu(dateKey, day, event) {
@@ -1572,12 +2148,13 @@
             currentDate = new Date(clickDate.getFullYear(), clickDate.getMonth(), 1);
             updateSidebar();
             renderCalendar();
+            renderYearlyView();
             openModal(dateKey, day);
         }
 
         function calculatePayroll() {
             const u = getUser();
-            const cfg = u.config;
+            const cfg = u.config || { baseSalary: 0, carencia: 0, funcion: 0, prorrataExtra: 0, nightRate: 0, irpf: 0, complements: [] };
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             const totalDays = new Date(year, month + 1, 0).getDate();
@@ -1605,24 +2182,52 @@
 
             let guardInterventionPay = GUARDIA_INTERVENCION[guardInterventionDays] || (guardInterventionDays * 52.35);
             let totalGuardPay = guardDispoPay + guardInterventionPay;
-            let nightPay = nightHours * cfg.nightRate;
+            let nightPay = nightHours * (cfg.nightRate || 0);
             let extraMgPay = mgHours * HORA_EXTRA_MG;
             let extraNgPay = ngHours * HORA_EXTRA_NG;
 
-            const baseTotal = cfg.baseSalary + cfg.carencia + cfg.funcion;
-            const prorrataExtra = 365.92;
-            const brutoTotal = baseTotal + nightPay + totalGuardPay + extraMgPay + extraNgPay + prorrataExtra;
+            let totalComplements = 0;
+            const compContainer = document.getElementById('payrollComplementsContainer');
+            const compList = document.getElementById('valComplementsList');
+            compList.innerHTML = '';
+
+            if (cfg.complements && cfg.complements.length > 0) {
+                let hasValidComp = false;
+                cfg.complements.forEach(comp => {
+                    const amount = parseFloat(comp.amount) || 0;
+                    if (comp.name && amount !== 0) {
+                        hasValidComp = true;
+                        totalComplements += amount;
+                        const compRow = document.createElement('div');
+                        compRow.className = "flex justify-between text-slate-300";
+                        compRow.innerHTML = `<span>${comp.name}:</span><span class="font-mono font-semibold ${amount < 0 ? 'text-rose-400' : 'text-emerald-400'}">${amount.toFixed(2)} €</span>`;
+                        compList.appendChild(compRow);
+                    }
+                });
+                if (hasValidComp) {
+                    compContainer.classList.remove('hidden');
+                    document.getElementById('valComplementsTotal').innerText = totalComplements.toFixed(2) + ' €';
+                } else {
+                    compContainer.classList.add('hidden');
+                }
+            } else {
+                compContainer.classList.add('hidden');
+            }
+
+            const baseTotal = (cfg.baseSalary || 0) + (cfg.carencia || 0) + (cfg.funcion || 0);
+            const prorrataExtra = cfg.prorrataExtra || 0;
+            const brutoTotal = baseTotal + nightPay + totalGuardPay + extraMgPay + extraNgPay + prorrataExtra + totalComplements;
 
             const cuotaSS = brutoTotal * 0.0485;
             const desempleo = brutoTotal * 0.0165;
             const baseIrpf = brutoTotal - prorrataExtra;
-            const irpf = baseIrpf * (cfg.irpf / 100);
+            const irpf = baseIrpf * ((cfg.irpf || 0) / 100);
 
             const totalDeducciones = cuotaSS + desempleo + irpf;
             const netoTotal = brutoTotal - prorrataExtra - totalDeducciones;
 
             document.getElementById('valBaseSalaryTotal').innerText = baseTotal.toFixed(2) + ' €';
-            document.getElementById('valBaseSalaryBreakdown').innerText = `(${cfg.baseSalary.toFixed(2)}€ + ${cfg.carencia.toFixed(2)}€ + ${cfg.funcion.toFixed(2)}€)`;
+            document.getElementById('valBaseSalaryBreakdown').innerText = `(${(cfg.baseSalary||0).toFixed(2)}€ + ${(cfg.carencia||0).toFixed(2)}€ + ${(cfg.funcion||0).toFixed(2)}€)`;
             document.getElementById('valProrrataExtra').innerText = prorrataExtra.toFixed(2) + ' €';
             document.getElementById('countNights').innerText = nightHours;
             document.getElementById('valNights').innerText = nightPay.toFixed(2) + ' €';
@@ -1634,6 +2239,7 @@
             document.getElementById('valBruto').innerText = brutoTotal.toFixed(2) + ' €';
             document.getElementById('valSS').innerText = '-' + cuotaSS.toFixed(2) + ' €';
             document.getElementById('valDesempleo').innerText = '-' + desempleo.toFixed(2) + ' €';
+            document.getElementById('valIrpfPercent').innerText = (cfg.irpf || 0);
             document.getElementById('valIRPF').innerText = '-' + irpf.toFixed(2) + ' €';
             document.getElementById('valNeto').innerText = netoTotal.toFixed(2) + ' €';
         }
@@ -1666,29 +2272,40 @@
 
             const availableColors = u.colors || defaultColors;
 
+            let shiftsCount = Object.keys(availableColors).length;
+            document.getElementById('shiftBgCount').innerText = shiftsCount;
+
             Object.keys(availableColors).forEach(sCode => {
                 const colorObj = availableColors[sCode];
                 const row = document.createElement('div');
-                row.className = "flex flex-col gap-1.5 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60";
+                row.className = "flex flex-col gap-2 bg-slate-800/60 p-3 rounded-xl border border-slate-700/60";
                 
                 const fullName = shiftFullNames[sCode] || `${sCode} - Turno ${sCode}`;
+                const hasImg = !!(u.customImages && u.customImages[sCode]);
 
                 row.innerHTML = `
                     <div class="flex items-center gap-1.5 w-full">
                         <input type="text" value="${sCode}" onchange="updateShiftCode('${sCode}', this.value)" class="font-bold text-white text-xs bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 uppercase w-16 text-center" title="Editar Título / Código">
                         <input type="text" value="${fullName}" onchange="updateShiftFullName('${sCode}', this.value)" class="flex-1 font-medium text-slate-200 text-xs bg-slate-900 border border-slate-700 rounded-lg px-2 py-1" placeholder="Nombre completo del turno" title="Editar Nombre del Turno">
-                        <button onclick="deleteShift('${sCode}')" class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition" title="Borrar Turno">
+                        <button onclick="openConfirmDeleteShiftModal('${sCode}')" class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition flex-shrink-0" title="Borrar Turno">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    <div class="flex items-center justify-end gap-3 w-full pt-1 border-t border-slate-700/40">
-                        <div class="flex items-center gap-1">
-                            <span class="text-[9px] text-slate-400">Fondo:</span>
-                            <input type="color" value="${colorObj.bg}" onchange="updateShiftColor('${sCode}', 'bg', this.value)" class="w-6 h-5 bg-transparent rounded cursor-pointer">
+                    <div class="flex flex-wrap items-center justify-between gap-2 w-full pt-1.5 border-t border-slate-700/40">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-1">
+                                <span class="text-[10px] text-slate-400">Fondo:</span>
+                                <input type="color" value="${colorObj.bg}" onchange="updateShiftColor('${sCode}', 'bg', this.value)" class="w-6 h-5 bg-transparent rounded cursor-pointer">
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="text-[10px] text-slate-400">Borde:</span>
+                                <input type="color" value="${colorObj.border || colorObj.bg}" onchange="updateShiftColor('${sCode}', 'border', this.value)" class="w-6 h-5 bg-transparent rounded cursor-pointer">
+                            </div>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <span class="text-[9px] text-slate-400">Borde:</span>
-                            <input type="color" value="${colorObj.border || colorObj.bg}" onchange="updateShiftColor('${sCode}', 'border', this.value)" class="w-6 h-5 bg-transparent rounded cursor-pointer">
+                        <div class="flex items-center gap-1.5 flex-1 justify-end">
+                            <label class="text-[10px] text-slate-400">Foto:</label>
+                            <input type="file" accept="image/*" onchange="uploadShiftBgImage('${sCode}', this)" class="text-[9px] text-slate-400 cursor-pointer max-w-[180px]">
+                            ${hasImg ? `<button onclick="removeShiftBgImage('${sCode}')" class="p-1 text-rose-400 hover:bg-rose-500/20 rounded text-[10px] flex items-center gap-0.5 font-bold" title="Quitar foto de fondo"><i data-lucide="x" class="w-3 h-3"></i> Quitar</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1698,11 +2315,10 @@
         }
 
         function updateShiftCode(oldCode, newCode) {
-            newCode = newCode.toUpperCase().trim();
-            if (!newCode || newCode === oldCode) return;
-            const u = getUser();
-            if (!u.colors) u.colors = JSON.parse(JSON.stringify(defaultColors));
+            newCode = newCode.trim().toUpperCase();
+            if (!newCode || oldCode === newCode) return;
 
+            const u = getUser();
             if (u.colors[newCode]) {
                 openCustomAlertModal("Código Duplicado", "Ya existe un turno con ese código.");
                 renderExistingShiftsColorList();
@@ -1712,9 +2328,16 @@
             u.colors[newCode] = u.colors[oldCode];
             delete u.colors[oldCode];
 
-            shiftFullNames[newCode] = shiftFullNames[oldCode] ? shiftFullNames[oldCode].replace(oldCode, newCode) : `${newCode} - Turno ${newCode}`;
-            delete shiftFullNames[oldCode];
-            saveShiftFullNames();
+            if (u.customImages && u.customImages[oldCode]) {
+                u.customImages[newCode] = u.customImages[oldCode];
+                delete u.customImages[oldCode];
+            }
+
+            if (shiftFullNames[oldCode]) {
+                shiftFullNames[newCode] = shiftFullNames[oldCode];
+                delete shiftFullNames[oldCode];
+                saveShiftFullNames();
+            }
 
             Object.keys(u.shifts || {}).forEach(k => {
                 if (u.shifts[k].shift === oldCode) {
@@ -1726,333 +2349,403 @@
             renderExistingShiftsColorList();
             renderCalendar();
             updateSidebar();
-            if (currentView === 'year') renderYearlyView();
         }
 
         function updateShiftFullName(code, newName) {
-            newName = newName.trim();
-            if (!newName) return;
-            shiftFullNames[code] = newName;
+            shiftFullNames[code] = newName.trim();
             saveShiftFullNames();
             updateSidebar();
         }
 
-        function deleteShift(code) {
-            openConfirmDeleteShiftModal(code);
+        function updateShiftColor(code, key, val) {
+            const u = getUser();
+            if (!u.colors[code]) u.colors[code] = { ...defaultColors[code] };
+            u.colors[code][key] = val;
+            saveData();
+            renderCalendar();
+            updateSidebar();
+        }
+
+        function uploadShiftBgImage(code, inputElem) {
+            if (inputElem.files && inputElem.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const u = getUser();
+                    if (!u.customImages) u.customImages = {};
+                    u.customImages[code] = e.target.result;
+                    saveData();
+                    renderExistingShiftsColorList();
+                    updateSidebar();
+                };
+                reader.readAsDataURL(inputElem.files[0]);
+            }
+        }
+
+        function removeShiftBgImage(code) {
+            const u = getUser();
+            if (u.customImages && u.customImages[code]) {
+                delete u.customImages[code];
+                saveData();
+                renderExistingShiftsColorList();
+                updateSidebar();
+            }
         }
 
         function executeDeleteShift(code) {
             const u = getUser();
-            
-            if (u.colors) delete u.colors[code];
-            delete shiftFullNames[code];
-            saveShiftFullNames();
-
+            if (u.colors && u.colors[code]) {
+                delete u.colors[code];
+            }
+            if (u.customImages && u.customImages[code]) {
+                delete u.customImages[code];
+            }
+            if (shiftFullNames[code]) {
+                delete shiftFullNames[code];
+                saveShiftFullNames();
+            }
             Object.keys(u.shifts || {}).forEach(k => {
                 if (u.shifts[k].shift === code) {
                     delete u.shifts[k].shift;
                 }
             });
-
             saveData();
             renderExistingShiftsColorList();
             renderCalendar();
             updateSidebar();
-            if (currentView === 'year') renderYearlyView();
         }
 
-        function updateShiftColor(code, type, value) {
-            const u = getUser();
-            if (!u.colors) u.colors = JSON.parse(JSON.stringify(defaultColors));
-            if (!u.colors[code]) {
-                u.colors[code] = { bg: '#3b82f6', text: '#ffffff', border: '#1d4ed8' };
-            }
-            u.colors[code][type] = value;
-            saveData();
-            renderCalendar();
-            if (currentView === 'year') {
-                renderYearlyView();
-            }
-        }
-
-        function openCustomShiftModal() { 
-            renderExistingShiftsColorList();
-            document.getElementById('customShiftModal').classList.remove('hidden'); 
-        }
-        function closeCustomShiftModal() { document.getElementById('customShiftModal').classList.add('hidden'); }
         function confirmAddShift() {
-            const code = document.getElementById('newShiftCode').value.toUpperCase().trim();
-            const name = document.getElementById('newShiftName').value.trim();
-            const bg = document.getElementById('newShiftBg').value;
-            const bd = document.getElementById('newShiftBd').value;
+            const codeInput = document.getElementById('newShiftCode');
+            const nameInput = document.getElementById('newShiftName');
+            const bgInput = document.getElementById('newShiftBg');
+            const bdInput = document.getElementById('newShiftBd');
+            const imgInput = document.getElementById('newShiftImg');
 
-            if (!code) return openCustomAlertModal("Etiqueta requerida", "Introduce un código de turno.");
+            const code = codeInput.value.trim().toUpperCase();
+            const name = nameInput.value.trim();
+
+            if (!code) {
+                openCustomAlertModal("Código Requerido", "Por favor ingresa un código para el turno.");
+                return;
+            }
 
             const u = getUser();
-            if (!u.colors) u.colors = JSON.parse(JSON.stringify(defaultColors));
-            u.colors[code] = { bg, text: '#ffffff', border: bd };
+            const availableColors = u.colors || defaultColors;
 
-            shiftFullNames[code] = name || `${code} - Turno Personalizado`;
+            if (Object.keys(availableColors).length >= MAX_CUSTOM_SHIFTS) {
+                openCustomAlertModal("Límite Alcanzado", `Se ha alcanzado el límite máximo de ${MAX_CUSTOM_SHIFTS} turnos.`);
+                return;
+            }
+
+            if (availableColors[code]) {
+                openCustomAlertModal("Turno Existente", "Ya existe un turno con ese código.");
+                return;
+            }
+
+            u.colors[code] = { bg: bgInput.value, text: '#ffffff', border: bdInput.value };
+            shiftFullNames[code] = name || `${code} - Turno ${code}`;
             saveShiftFullNames();
 
+            if (imgInput.files && imgInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    u.customImages[code] = e.target.result;
+                    saveData();
+                    finishAddShift();
+                };
+                reader.readAsDataURL(imgInput.files[0]);
+            } else {
+                saveData();
+                finishAddShift();
+            }
+        }
+
+        function finishAddShift() {
             document.getElementById('newShiftCode').value = '';
             document.getElementById('newShiftName').value = '';
-
-            saveData();
-            closeCustomShiftModal();
+            document.getElementById('newShiftImg').value = '';
+            renderExistingShiftsColorList();
             renderCalendar();
-            if (currentView === 'year') {
-                renderYearlyView();
+            updateSidebar();
+        }
+
+        function openCustomShiftModal() {
+            renderExistingShiftsColorList();
+            document.getElementById('customShiftModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeCustomShiftModal() {
+            document.getElementById('customShiftModal').classList.add('hidden');
+        }
+
+        function openAddUserModal() {
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserMail').value = '';
+            document.getElementById('addUserModal').classList.remove('hidden');
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').classList.add('hidden');
+        }
+
+        async function confirmAddUser() {
+            const name = document.getElementById('newUserName').value.trim();
+            const mail = document.getElementById('newUserMail').value.trim();
+
+            if (!name) {
+                openCustomAlertModal("Nombre Requerido", "Por favor ingresa el nombre del nuevo usuario.");
+                return;
             }
+
+            const customUid = generateUniqueUserId(name);
+            const userRef = db.collection('user').doc(customUid);
+
+            const docSnap = await userRef.get();
+            if (docSnap.exists) {
+                openCustomAlertModal("Usuario Existente", "Ya existe un usuario registrado con ese nombre.");
+                return;
+            }
+
+            // Generar una contraseña temporal igual al nombre para el usuario secundario creado desde el panel
+            const defaultPassHash = hashPassword(name);
+
+            await userRef.set({
+                uid: customUid,
+                username: name,
+                passwordHash: defaultPassHash,
+                email: mail || '',
+                createdAt: new Date().toISOString()
+            });
+
+            closeAddUserModal();
+            openCustomAlertModal("Usuario Creado", `El usuario ${name} ha sido creado. La contraseña por defecto es su propio nombre.`);
         }
 
         function openSettingsModal() {
             const u = getUser();
-            document.getElementById('cfgBaseSalary').value = u.config.baseSalary;
-            document.getElementById('cfgCarencia').value = u.config.carencia;
-            document.getElementById('cfgFuncion').value = u.config.funcion;
-            document.getElementById('cfgIrpf').value = u.config.irpf;
+            const cfg = u.config || {};
+
+            document.getElementById('cfgBaseSalary').value = cfg.baseSalary || 0;
+            document.getElementById('cfgCarencia').value = cfg.carencia || 0;
+            document.getElementById('cfgFuncion').value = cfg.funcion || 0;
+            document.getElementById('cfgProrrataExtra').value = cfg.prorrataExtra || 0;
+            document.getElementById('cfgNightRate').value = cfg.nightRate || 0;
+            document.getElementById('cfgIrpf').value = cfg.irpf || 0;
+
+            const preview = document.getElementById('avatarPreview');
+            if (u.avatar) {
+                preview.innerHTML = `<img src="${u.avatar}" class="w-full h-full object-cover rounded-full">`;
+            } else {
+                const letter = (u.name && u.name.length > 0) ? u.name.charAt(0).toUpperCase() : 'U';
+                preview.innerHTML = `<span class="text-white font-bold text-lg">${letter}</span>`;
+            }
 
             tempAvatarData = null;
             deletedAvatar = false;
-            deletedShiftImages = {};
 
-            document.getElementById('userAvatarUpload').value = '';
-            document.getElementById('imgUpload_M').value = '';
-            document.getElementById('imgUpload_T').value = '';
-            document.getElementById('imgUpload_N').value = '';
-
-            updateSettingsAvatarPreview();
-
-            const bList = document.getElementById('backupsList');
-            bList.innerHTML = '';
-            if (backupsHistory.length === 0) {
-                bList.innerHTML = `<div class="text-slate-500 text-[10px]">No hay copias disponibles</div>`;
-            } else {
-                backupsHistory.forEach((b, idx) => {
-                    const row = document.createElement('div');
-                    row.className = "flex justify-between items-center text-[10px] border-b border-slate-800/50 pb-1";
-                    row.innerHTML = `
-                        <div>
-                            <span class="font-bold text-blue-400">${b.version}</span> - 
-                            <span class="text-slate-300">${b.reason}</span>
-                            <div class="text-[8px] text-slate-500">${b.timestamp}</div>
-                        </div>
-                        <button onclick="restoreBackup(${idx})" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-2 py-0.5 rounded text-[9px] transition">Restaurar</button>
-                    `;
-                    bList.appendChild(row);
-                });
-            }
+            renderComplementsInputs();
+            renderBackupsList();
 
             document.getElementById('settingsModal').classList.remove('hidden');
             lucide.createIcons();
         }
 
-        function previewUserAvatar(input) {
-            if (input.files && input.files[0]) {
-                compressImageFile(input.files[0], 200, 200, 0.85).then(compressedData => {
-                    tempAvatarData = compressedData;
-                    deletedAvatar = false;
-                    updateSettingsAvatarPreview();
-                    
-                    const mainContainer = document.getElementById('userAvatarContainer');
-                    if (mainContainer) {
-                        mainContainer.innerHTML = `<img src="${tempAvatarData}" class="w-full h-full object-cover rounded-full">`;
-                    }
-                });
-            }
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
         }
 
-        function updateSettingsAvatarPreview() {
-            const u = getUser();
-            const prev = document.getElementById('avatarPreview');
-            if (!deletedAvatar && (tempAvatarData || u.avatar)) {
-                const src = tempAvatarData || u.avatar;
-                prev.innerHTML = `<img src="${src}" class="w-full h-full object-cover">`;
-            } else {
-                const letter = (u.name && u.name.length > 0) ? u.name.charAt(0).toUpperCase() : 'U';
-                prev.innerHTML = `<span>${letter}</span>`;
+        function previewUserAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempAvatarData = e.target.result;
+                    deletedAvatar = false;
+                    document.getElementById('avatarPreview').innerHTML = `<img src="${tempAvatarData}" class="w-full h-full object-cover rounded-full">`;
+                };
+                reader.readAsDataURL(input.files[0]);
             }
         }
 
         function removeAvatarImage() {
-            deletedAvatar = true;
             tempAvatarData = null;
-            document.getElementById('userAvatarUpload').value = '';
-            updateSettingsAvatarPreview();
-            
+            deletedAvatar = true;
             const u = getUser();
-            const mainContainer = document.getElementById('userAvatarContainer');
-            if (mainContainer) {
-                const letter = (u.name && u.name.length > 0) ? u.name.charAt(0).toUpperCase() : 'U';
-                mainContainer.innerHTML = `<span id="userAvatar">${letter}</span>`;
+            const letter = (u.name && u.name.length > 0) ? u.name.charAt(0).toUpperCase() : 'U';
+            document.getElementById('avatarPreview').innerHTML = `<span class="text-white font-bold text-lg">${letter}</span>`;
+            document.getElementById('userAvatarUpload').value = '';
+        }
+
+        function renderComplementsInputs() {
+            const u = getUser();
+            const list = document.getElementById('complementsList');
+            list.innerHTML = '';
+
+            const compList = (u.config && u.config.complements) ? u.config.complements : [];
+
+            compList.forEach((comp, idx) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center gap-2";
+                row.innerHTML = `
+                    <input type="text" value="${comp.name || ''}" placeholder="Concepto" onchange="updateComplementField(${idx}, 'name', this.value)" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium text-xs">
+                    <input type="number" step="any" value="${comp.amount || 0}" placeholder="Monto (€)" onchange="updateComplementField(${idx}, 'amount', this.value)" class="w-24 bg-slate-800 border border-slate-700 rounded-xl p-2 text-white font-medium text-xs">
+                    <button type="button" onclick="removeComplementInput(${idx})" class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                `;
+                list.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function addNewComplementInput() {
+            const u = getUser();
+            if (!u.config.complements) u.config.complements = [];
+            u.config.complements.push({ name: '', amount: 0 });
+            renderComplementsInputs();
+        }
+
+        function updateComplementField(idx, field, val) {
+            const u = getUser();
+            if (u.config.complements && u.config.complements[idx]) {
+                if (field === 'amount') {
+                    u.config.complements[idx][field] = parseFloat(val) || 0;
+                } else {
+                    u.config.complements[idx][field] = val;
+                }
             }
         }
 
-        function removeShiftImage(shiftKey) {
-            deletedShiftImages[shiftKey] = true;
-            const input = document.getElementById(`imgUpload_${shiftKey}`);
-            if (input) input.value = '';
+        function removeComplementInput(idx) {
+            const u = getUser();
+            if (u.config.complements && u.config.complements[idx]) {
+                u.config.complements.splice(idx, 1);
+                renderComplementsInputs();
+            }
         }
 
-        function restoreBackup(index) {
-            if (!confirm("¿Restaurar esta copia de seguridad? Se perderán los cambios no guardados.")) return;
-            const backup = backupsHistory[index];
-            appData = JSON.parse(backup.data);
-            saveData();
-            closeSettingsModal();
-            showAppLayout();
-        }
+        function renderBackupsList() {
+            const container = document.getElementById('backupsList');
+            container.innerHTML = '';
 
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+            if (backupsHistory.length === 0) {
+                container.innerHTML = `<div class="text-[10px] text-slate-500 italic p-1">No hay copias de seguridad registradas.</div>`;
+                return;
+            }
 
-        function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
-            return new Promise((resolve) => {
-                if (!file) return resolve(null);
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > height) {
-                            if (width > maxWidth) {
-                                height = Math.round((height * maxWidth) / width);
-                                width = maxWidth;
-                            }
-                        } else {
-                            if (height > maxHeight) {
-                                width = Math.round((width * maxHeight) / height);
-                                height = maxHeight;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', quality));
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
+            backupsHistory.forEach((b, idx) => {
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center text-[10px] bg-slate-900 border border-slate-800 p-2 rounded-lg";
+                row.innerHTML = `
+                    <div>
+                        <div class="font-bold text-slate-200">${b.reason || 'Copia Automática'}</div>
+                        <div class="text-slate-500">${b.timestamp}</div>
+                    </div>
+                    <button onclick="requestAdminAuthRestore(${idx})" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-2 py-1 rounded font-bold transition">Restaurar</button>
+                `;
+                container.appendChild(row);
             });
         }
 
-        async function saveSettings() {
-            try {
-                const u = getUser();
-                u.config.baseSalary = parseFloat(document.getElementById('cfgBaseSalary').value) || 0;
-                u.config.carencia = parseFloat(document.getElementById('cfgCarencia').value) || 0;
-                u.config.funcion = parseFloat(document.getElementById('cfgFuncion').value) || 0;
-                u.config.irpf = parseFloat(document.getElementById('cfgIrpf').value) || 0;
+        function requestAdminAuthRestore(idx) {
+            pendingRestoreIndex = idx;
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminAuthModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
 
-                if (!u.customImages) u.customImages = {};
+        function closeAdminAuthModal() {
+            pendingRestoreIndex = null;
+            document.getElementById('adminAuthModal').classList.add('hidden');
+        }
 
-                if (deletedAvatar) {
-                    u.avatar = null;
-                } else if (tempAvatarData) {
-                    u.avatar = tempAvatarData;
+        function confirmAdminRestore() {
+            const inputPass = document.getElementById('adminPasswordInput').value.trim();
+            if (inputPass === ADMIN_RESTORE_PASSWORD) {
+                closeAdminAuthModal();
+                if (pendingRestoreIndex !== null && backupsHistory[pendingRestoreIndex]) {
+                    try {
+                        appData = JSON.parse(backupsHistory[pendingRestoreIndex].data);
+                        saveData();
+                        closeSettingsModal();
+                        showAppLayout();
+                        openCustomAlertModal("Restauración Exitosa", "Se ha restaurado la copia de seguridad seleccionada.");
+                    } catch (e) {
+                        openCustomAlertModal("Error de Restauración", "La copia de seguridad seleccionada está corrupta o dañada.");
+                    }
                 }
-
-                const shiftsToProcess = [
-                    { id: 'imgUpload_M', key: 'M' },
-                    { id: 'imgUpload_T', key: 'T' },
-                    { id: 'imgUpload_N', key: 'N' }
-                ];
-
-                const shiftPromises = shiftsToProcess.map(item => {
-                    if (deletedShiftImages[item.key]) {
-                        delete u.customImages[item.key];
-                    }
-                    const input = document.getElementById(item.id);
-                    if (input && input.files && input.files[0]) {
-                        return compressImageFile(input.files[0], 800, 800, 0.7).then(compressed => ({ key: item.key, data: compressed }));
-                    }
-                    return Promise.resolve(null);
-                });
-
-                const shiftResults = await Promise.all(shiftPromises);
-
-                shiftResults.forEach(res => {
-                    if (res && res.data) {
-                        u.customImages[res.key] = res.data;
-                    }
-                });
-
-                createAutoBackup('Ajustes e Imágenes guardados');
-                saveData();
-                closeSettingsModal();
-                
-                updateAvatarUI();
-                renderCalendar();
-                updateSidebar();
-            } catch (err) {
-                console.error("Error al guardar ajustes:", err);
-                closeSettingsModal();
+            } else {
+                openCustomAlertModal("Acceso Denegado", "La contraseña de administrador es incorrecta.");
             }
         }
 
-        function openAddUserModal() { document.getElementById('addUserModal').classList.remove('hidden'); }
-        function closeAddUserModal() { document.getElementById('addUserModal').classList.add('hidden'); }
-        function confirmAddUser() {
-            const name = document.getElementById('newUserName').value.trim();
-            const email = document.getElementById('newUserMail').value.toLowerCase().trim();
-            if (!email || !name) return openCustomAlertModal("Campos Incompletos", "Rellena todos los datos.");
+        function saveSettings() {
+            const u = getUser();
+            u.config.baseSalary = parseFloat(document.getElementById('cfgBaseSalary').value) || 0;
+            u.config.carencia = parseFloat(document.getElementById('cfgCarencia').value) || 0;
+            u.config.funcion = parseFloat(document.getElementById('cfgFuncion').value) || 0;
+            u.config.prorrataExtra = parseFloat(document.getElementById('cfgProrrataExtra').value) || 0;
+            u.config.nightRate = parseFloat(document.getElementById('cfgNightRate').value) || 0;
+            u.config.irpf = parseFloat(document.getElementById('cfgIrpf').value) || 0;
 
-            appData[email] = createNewUserObj(name, email);
-            currentUserEmail = email;
-            localStorage.setItem('activeUserSession', currentUserEmail);
+            if (deletedAvatar) {
+                u.avatar = null;
+            } else if (tempAvatarData) {
+                u.avatar = tempAvatarData;
+            }
+
             saveData();
-            closeAddUserModal();
-            showAppLayout();
+            updateAvatarUI();
+            closeSettingsModal();
+            renderCalendar();
         }
 
         function openModal(dateKey, day) {
             const u = getUser();
-            const info = u.shifts[dateKey] || {};
-            const select = document.getElementById('modalShift');
-            
-            select.innerHTML = '<option value="">Sin Turno / Libre</option>';
+            const parts = dateKey.split('-');
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+            document.getElementById('modalTitle').innerText = `Editar Día ${day} de ${monthNames[parseInt(parts[1])-1]}`;
+
+            const shiftSelect = document.getElementById('modalShift');
+            shiftSelect.innerHTML = '<option value="">Sin Turno (Vacío)</option>';
+
             const availableColors = u.colors || defaultColors;
-            
+
             Object.keys(availableColors).forEach(sCode => {
                 const opt = document.createElement('option');
                 opt.value = sCode;
-                opt.innerText = shiftFullNames[sCode] || `${sCode}`;
-                select.appendChild(opt);
+                opt.innerText = shiftFullNames[sCode] || `${sCode} - Turno ${sCode}`;
+                shiftSelect.appendChild(opt);
             });
 
-            document.getElementById('modalTitle').innerText = `Editar Día ${day}`;
-            select.value = info.shift || '';
-            document.getElementById('modalDayType').value = info.dayType || 'auto';
+            const dayInfo = u.shifts[dateKey] || {};
+            shiftSelect.value = dayInfo.shift || '';
+            document.getElementById('modalDayType').value = dayInfo.dayType || 'auto';
+
             document.getElementById('dayModal').classList.remove('hidden');
         }
 
-        function closeModal() { document.getElementById('dayModal').classList.add('hidden'); }
-        
+        function closeModal() {
+            document.getElementById('dayModal').classList.add('hidden');
+        }
+
         function clearSingleDay() {
             const u = getUser();
-            if (u.shifts && u.shifts[selectedDayKey]) {
+            if (u.shifts[selectedDayKey]) {
                 delete u.shifts[selectedDayKey];
+                saveData();
+                renderCalendar();
+                updateSidebar();
             }
-            saveData();
             closeModal();
-            renderCalendar();
-            updateSidebar();
         }
 
         function saveModal() {
-            const shift = document.getElementById('modalShift').value;
-            const dayType = document.getElementById('modalDayType').value;
             const u = getUser();
+            const shiftVal = document.getElementById('modalShift').value;
+            const dayTypeVal = document.getElementById('modalDayType').value;
 
-            if (!u.shifts) u.shifts = {};
-
-            if (shift || dayType !== 'auto') {
-                u.shifts[selectedDayKey] = { shift, dayType };
+            if (shiftVal || dayTypeVal !== 'auto') {
+                u.shifts[selectedDayKey] = { shift: shiftVal, dayType: dayTypeVal };
             } else {
                 delete u.shifts[selectedDayKey];
             }
@@ -2062,8 +2755,6 @@
             renderCalendar();
             updateSidebar();
         }
-
-        window.onload = init;
     </script>
 </body>
 </html>
