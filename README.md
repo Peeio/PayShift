@@ -15,10 +15,13 @@ Una aplicación web intuitiva y ligera para organizar tus turnos de trabajo, con
 
 ## 🛠️ Tecnologías
 
-HTML, CSS y JavaScript, Tailwind CSS, Lucide Icons y Firebase Authentication / Cloud Firestore.
+- HTML
+- CSS y JavaScript
+- Tailwind CSS y Lucide Icons
+- Firebase Authentication / Cloud Firestore.
 
 ## 🚀 Puesta en marcha
 
 La aplicación se encuentra en `Index.html` y no necesita un proceso de compilación. Para ejecutarla con tus propios datos, configura el proyecto de Firebase, habilita los métodos de acceso que vayas a utilizar y configura las reglas de seguridad de Cloud Firestore antes de desplegarla.
 
-> **Nota:** Los importes de nómina son estimaciones basadas en los parámetros configurados; conviene contrastarlos con la nómina real y las condiciones laborales aplicables.
+> **Nota:** Los importes de nómina no vienen con los parámetros configurados de base; se pueden establecer en el primer acceso o más adelante en el panel de ajustes. También es posible añadir pluses relacionados al salario percibido.
