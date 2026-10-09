@@ -2846,7 +2846,7 @@
                 }
             });
             createAutoBackup(`Asignación múltiple (${selectedKeys.length} días)`);
-            await saveDataToFirebase();
+            await saveDataToFirebase(false);
             clearRangeSelection();
         }
 
