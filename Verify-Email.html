@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Correo - Gestión de Turnos & Nómina</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'><path d='M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/></svg>"
+        type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> tailwind.config = { darkMode: 'class', }</script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- SDKs de Firebase (v9 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        html:not(.dark) body {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .auth-card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        html:not(.dark) .auth-card {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 25px -5px rgba(100, 116, 139, 0.1);
+        }
+
+        #authPrimaryBtn {
+            box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.4);
+        }
+
+        .select-none {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 flex items-center justify-center p-4 select-none">
+
+    <!-- Tarjeta Principal -->
+    <div class="auth-card bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 w-full max-w-md space-y-6 shadow-2xl text-center">
+        
+        <!-- Icono animado -->
+        <div class="inline-flex p-4 bg-blue-600/20 text-blue-400 rounded-3xl mb-1 relative">
+            <i data-lucide="mail-check" class="w-10 h-10 animate-bounce"></i>
+        </div>
+
+        <div class="space-y-2">
+            <h2 class="text-2xl font-bold text-white">Verifica tu Correo</h2>
+            <p class="text-sm text-slate-400 leading-relaxed">
+                Hemos enviado un correo de confirmación a <br>
+                <strong id="userEmailDisplay" class="text-blue-400 font-semibold">Cargando correo...</strong>
+            </p>
+        </div>
+
+        <div class="p-4 bg-slate-950/60 rounded-2xl border border-slate-800 text-xs text-slate-400 space-y-2 text-left">
+            <div class="flex items-start gap-2">
+                <i data-lucide="info" class="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5"></i>
+                <span>Haz clic en el enlace adjunto en el correo para activar todas las funciones de tu cuenta.</span>
+            </div>
+            <div class="flex items-start gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5"></i>
+                <span>Si no lo encuentras, revisa tu bandeja de correo no deseado (Spam).</span>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="space-y-3 pt-2">
+            <button id="authPrimaryBtn" onclick="checkVerificationStatus()"
+                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm transition duration-200 flex items-center justify-center gap-2">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Comprobar Verificación
+            </button>
+
+            <button type="button" onclick="resendVerificationEmail()" id="btnResend"
+                class="w-full bg-slate-800 hover:bg-slate-700/80 text-slate-300 font-semibold py-3 rounded-xl text-sm transition border border-slate-700">
+                Reenviar Correo de Verificación
+            </button>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800">
+            <button onclick="handleLogout()" class="text-xs text-slate-400 hover:text-rose-400 transition font-medium flex items-center justify-center gap-1 mx-auto">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Cerrar sesión o cambiar de cuenta
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Alerta Personalizado -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-xs w-full space-y-4 shadow-2xl text-center">
+            <div class="inline-flex p-3 bg-amber-500/20 text-amber-400 rounded-2xl">
+                <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            </div>
+            <h4 id="customAlertTitle" class="font-bold text-white text-base">Atención</h4>
+            <p id="customAlertMessage" class="text-slate-400 text-sm"></p>
+            <button id="customAlertBtn" onclick="closeCustomAlertModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const RUTA_LOGIN = 'http://localhost/gemini-code-1790536833433(1)%20(1).html';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvcqxV9UTRyJLQHD6r7rUqikB53WskTdQ",
+            authDomain: "payshift-0.firebaseapp.com",
+            projectId: "payshift-0",
+            storageBucket: "payshift-0.firebasestorage.app",
+            messagingSenderId: "905065765221",
+            appId: "1:905065765221:web:b47a3a4ce145b9e855698c",
+            measurementId: "G-W9PZRNGXQF"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        auth.languageCode = 'es';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const actionMode = urlParams.get('mode');
+        const actionCode = urlParams.get('oobCode');
+        const emailFromUrl = urlParams.get('email');
+        let authReady = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+
+        if (emailFromUrl) {
+            localStorage.setItem('pendingVerificationEmail', emailFromUrl);
+        }
+
+        auth.onAuthStateChanged(async (user) => {
+            authReady = true;
+            const emailDisplay = document.getElementById('userEmailDisplay');
+            const localEmail = localStorage.getItem('pendingVerificationEmail');
+            const isEmailAction = actionMode === 'verifyEmail' && actionCode;
+
+            if (user) {
+                // Intentamos refrescar los datos del usuario de forma segura
+                try {
+                    await user.reload();
+                } catch (err) {
+                    console.warn("No se pudo refrescar el usuario:", err);
+                }
+
+                // Si el usuario YA ESTÁ VERIFICADO y NO viene desde el enlace del correo
+                if (auth.currentUser && auth.currentUser.emailVerified && !isEmailAction) {
+                    window.location.href = RUTA_LOGIN;
+                    return;
+                }
+
+                // Mostramos su correo en pantalla
+                if (emailDisplay) {
+                    emailDisplay.innerText = auth.currentUser.email;
+                }
+                localStorage.setItem('pendingVerificationEmail', auth.currentUser.email);
+
+            } else {
+                // Si NO hay sesión iniciada
+                if (!isEmailAction && !localEmail) {
+                    window.location.href = RUTA_LOGIN;
+                    return;
+                }
+                
+                if (emailDisplay) {
+                    emailDisplay.innerText = localEmail || "Tu correo registrado";
+                }
+            }
+        });
+
+        // Si viene desde el enlace del correo con el código de verificación
+        if (actionMode === 'verifyEmail' && actionCode) {
+            autoVerifyEmailCode(actionCode);
+        }
+    });
+
+        function waitForAuth() {
+            if (authReady) return Promise.resolve(auth.currentUser);
+            return new Promise(resolve => {
+                const unsubscribe = auth.onAuthStateChanged(user => {
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+        }
+
+        function setButtonLoading(btn, loading, loadingText) {
+            if (loading) {
+                btn.dataset.originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'cursor-not-allowed');
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> ${loadingText}`;
+                lucide.createIcons();
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+                lucide.createIcons();
+            }
+        }
+
+        async function goToLogin() {
+            localStorage.removeItem('pendingVerificationEmail');
+            try {
+                await auth.signOut();
+            } catch (e) {}
+            window.location.href = RUTA_LOGIN;
+        }
+
+        // Verificación automática al hacer clic en el enlace del correo
+        async function autoVerifyEmailCode(code) {
+            try {
+                await auth.applyActionCode(code);
+                window.history.replaceState({}, '', window.location.pathname);
+                openCustomAlertModal(
+                    "¡Correo Verificado!", 
+                    "Tu cuenta ha sido verificada con éxito. Ya puedes iniciar sesión.",
+                    "Ir al inicio de sesión",
+                    goToLogin
+                );
+            } catch (error) {
+                console.error(error);
+                openCustomAlertModal(
+                    "Enlace expirado o no válido", 
+                    "El enlace de verificación ha caducado o ya ha sido utilizado.",
+                    "Ir al Login",
+                    goToLogin
+                );
+            }
+        }
+
+        // Comprobación manual mediante el botón "Comprobar Verificación"
+        async function checkVerificationStatus() {
+            const btn = document.getElementById('authPrimaryBtn');
+            if (btn.disabled) return;
+            setButtonLoading(btn, true, 'Comprobando...');
+
+            try {
+                const user = await waitForAuth();
+                if (!user) {
+                    openCustomAlertModal(
+                        "Sesión no encontrada", 
+                        "Inicia sesión con tu correo y contraseña para comprobar la verificación.",
+                        "Ir al Login",
+                        goToLogin
+                    );
+                    return;
+                }
+
+                await user.reload();
+                if (auth.currentUser && auth.currentUser.emailVerified) {
+                    openCustomAlertModal(
+                        "¡Correo Verificado!", 
+                        "Tu correo ha sido verificado correctamente.",
+                        "Ir al inicio de sesión",
+                        goToLogin
+                    );
+                } else {
+                    openCustomAlertModal(
+                        "Aún pendiente", 
+                        "Tu correo todavía no figura como verificado. Revisa tu bandeja de entrada o haz clic en reenviar."
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+                openCustomAlertModal("Error", "No se pudo comprobar el estado. Inténtalo de nuevo.");
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        async function resendVerificationEmail() {
+            const btn = document.getElementById('btnResend');
+            if (btn.disabled) return;
+            setButtonLoading(btn, true, 'Enviando...');
+
+            try {
+                const user = await waitForAuth();
+                if (!user) {
+                    openCustomAlertModal(
+                        "Sesión requerida", 
+                        "Para volver a enviar el correo debes iniciar sesión previamente.",
+                        "Ir al Login",
+                        goToLogin
+                    );
+                    return;
+                }
+
+                await user.reload();
+                if (auth.currentUser.emailVerified) {
+                    openCustomAlertModal(
+                        "¡Ya verificado!", 
+                        "Tu correo ya está verificado.",
+                        "Ir al inicio de sesión",
+                        goToLogin
+                    );
+                    return;
+                }
+
+                const userEmail = auth.currentUser.email;
+                const actionCodeSettings = {
+                    url: window.location.origin + '/Verificar-Email.html?email=' + encodeURIComponent(userEmail)
+                };
+
+                try {
+                    await auth.currentUser.sendEmailVerification(actionCodeSettings);
+                } catch (error) {
+                    if (error?.code !== 'auth/unauthorized-continue-uri' && error?.code !== 'auth/invalid-continue-uri') throw error;
+                    await auth.currentUser.sendEmailVerification();
+                }
+
+                openCustomAlertModal("Correo Enviado", `Hemos enviado un nuevo enlace de verificación a ${userEmail}.`);
+            } catch (error) {
+                console.error(error);
+                const code = error?.code;
+                if (code === 'auth/too-many-requests') {
+                    openCustomAlertModal("Límite superado", "Has solicitado demasiados envíos. Espera unos minutos antes de reintentar.");
+                } else {
+                    openCustomAlertModal("Error", "No se pudo reenviar el correo de verificación.");
+                }
+            } finally {
+                setButtonLoading(btn, false);
+            }
+        }
+
+        async function handleLogout() {
+            await goToLogin();
+        }
+
+        function openCustomAlertModal(title, msg, btnText = "Entendido", onButtonClick = null) {
+            document.getElementById('customAlertTitle').innerText = title;
+            document.getElementById('customAlertMessage').innerText = msg;
+            
+            const alertBtn = document.getElementById('customAlertBtn');
+            alertBtn.innerText = btnText;
+            
+            alertBtn.onclick = function () {
+                closeCustomAlertModal();
+                if (typeof onButtonClick === 'function') {
+                    onButtonClick();
+                }
+            };
+
+            document.getElementById('customAlertModal').classList.remove('hidden');
+        }
+
+        function closeCustomAlertModal() {
+            document.getElementById('customAlertModal').classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>
