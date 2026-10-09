@@ -3815,7 +3815,7 @@
             const u = getUser();
             if (u.shifts[selectedDayKey]) {
                 delete u.shifts[selectedDayKey];
-                await saveDataToFirebase();
+                await saveDataToFirebase(false);
                 renderCalendar();
                 updateSidebar();
             }
@@ -3833,7 +3833,7 @@
                 delete u.shifts[selectedDayKey];
             }
 
-            await saveDataToFirebase();
+            await saveDataToFirebase(false);
             closeModal();
             renderCalendar();
             updateSidebar();
