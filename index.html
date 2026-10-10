@@ -978,6 +978,7 @@
                         <option value="LR">Lic. Retribuida (LR)</option>
                         <option value="F">Festivo (F)</option>
                         <option value="AC">Ajuste Calendario (AC)</option>
+                        <option value="V">Vacaciones (V)</option>
                     </select>
                     <button onclick="applyRangeShift()"
                         class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg font-bold transition">Aplicar</button>
@@ -1064,6 +1065,12 @@
                         class="payroll-box bg-slate-950 p-2 rounded-xl border border-slate-800/80 flex justify-between font-semibold payroll-label text-slate-200 text-[clamp(0.7rem,0.8vw,0.95rem)]">
                         <span>Prorrata Pagas Extras:</span>
                         <span id="valProrrataExtra" class="text-amber-500 font-bold">0,00 €</span>
+                    </div>
+
+                    <div id="payrollExtraPayRow"
+                        class="payroll-box bg-slate-950 p-2 rounded-xl border border-slate-800/80 flex justify-between font-semibold payroll-label text-slate-200 text-[clamp(0.7rem,0.8vw,0.95rem)] hidden">
+                        <span>Paga Extra:</span>
+                        <span id="valPagaExtra" class="text-amber-500 font-bold">0,00 €</span>
                     </div>
 
                     <div id="payrollComplementsContainer"
@@ -1810,7 +1817,8 @@
             B: "B - Baja",
             LR: "LR - Licencia Retribuida",
             F: "F - Festivo",
-            AC: "AC - Ajuste Calendario"
+            AC: "AC - Ajuste Calendario",
+            V: "V - Vacaciones"
         };
 
         async function saveShiftFullNames() {
@@ -1818,18 +1826,30 @@
         }
 
         const defaultColors = {
-            M: { bg: '#38bdf8', text: '#000000', border: '#0284c7', startTime: '08:00', endTime: '15:00' },
-            T: { bg: '#fb923c', text: '#000000', border: '#f97316', startTime: '15:00', endTime: '22:00' },
-            N: { bg: '#4338ca', text: '#ffffff', border: '#3730a3' },
+            M: { bg: '#38bdf8', text: '#000000', border: '#0284c7', startTime: '06:00', endTime: '14:00' },
+            T: { bg: '#fb923c', text: '#000000', border: '#f97316', startTime: '14:00', endTime: '22:00' },
+            N: { bg: '#4338ca', text: '#ffffff', border: '#3730a3', startTime: '22:00', endTime: '06:00' },
             G: { bg: '#f59e0b', text: '#ffffff', border: '#d97706' },
-            MG: { bg: '#38bdf8', text: '#000000', border: '#f59e0b' },
-            NG: { bg: '#4338ca', text: '#ffffff', border: '#f59e0b' },
+            MG: { bg: '#38bdf8', text: '#000000', border: '#f59e0b', startTime: '06:00', endTime: '14:00' },
+            NG: { bg: '#4338ca', text: '#ffffff', border: '#f59e0b', startTime: '14:00', endTime: '22:00' },
             E: { bg: '#6b7280', text: '#ffffff', border: '#4b5563' },
             B: { bg: '#a855f7', text: '#ffffff', border: '#9333ea' },
             LR: { bg: '#10b981', text: '#ffffff', border: '#059669' },
             F: { bg: '#ef4444', text: '#ffffff', border: '#dc2626' },
-            AC: { bg: '#14b8a6', text: '#ffffff', border: '#0d9488' }
+            AC: { bg: '#14b8a6', text: '#ffffff', border: '#0d9488' },
+            V: { bg: '#22c55e', text: '#ffffff', border: '#16a34a' }
         };
+
+        // Orden fijo de los turnos en los selectores y en el panel de configuración.
+        const SHIFT_ORDER = ['M', 'T', 'N', 'G', 'MG', 'NG', 'E', 'B', 'LR', 'F', 'AC', 'V'];
+
+        function getOrderedShiftCodes(availableColors) {
+            const codes = Object.keys(availableColors || {});
+            return [
+                ...SHIFT_ORDER.filter(code => codes.includes(code)),
+                ...codes.filter(code => !SHIFT_ORDER.includes(code))
+            ];
+        }
 
         const HORA_EXTRA_MG = 9.069115;
         const HORA_EXTRA_NG = 13.603673;
@@ -2236,6 +2256,15 @@
         }
 
         window.addEventListener('keydown', (event) => {
+            // La alerta de confirmación se cierra tanto con Enter como con Escape.
+            const customAlert = document.getElementById('customAlertModal');
+            if (customAlert && !customAlert.classList.contains('hidden') &&
+                (event.key === 'Enter' || event.key === 'Escape' || event.key === 'Esc')) {
+                event.preventDefault();
+                closeCustomAlertModal();
+                return;
+            }
+
             if (event.key === 'Escape' || event.key === 'Esc') {
                 // 1. Prioridad: Desmarcar selección múltiple del calendario
                 if (typeof selectedKeys !== 'undefined' && selectedKeys && selectedKeys.length > 0) {
@@ -2407,6 +2436,7 @@
             } else {
                 if (!appData[currentUserEmail].colors.F) appData[currentUserEmail].colors.F = defaultColors.F;
                 if (!appData[currentUserEmail].colors.AC) appData[currentUserEmail].colors.AC = defaultColors.AC;
+                if (!appData[currentUserEmail].colors.V) appData[currentUserEmail].colors.V = defaultColors.V;
             }
             if (!appData[currentUserEmail].customImages) {
                 appData[currentUserEmail].customImages = {};
@@ -3254,10 +3284,17 @@
 
             const baseTotal = (cfg.baseSalary || 0) + (cfg.carencia || 0) + (cfg.funcion || 0);
             const prorrataExtra = cfg.prorrataExtra || 0;
-            const brutoTotal = baseTotal + nightPay + totalGuardPay + extraMgPay + extraNgPay + prorrataExtra + totalComplements;
+            // En junio (5) y diciembre (11), la paga extra equivale a base + carencia + función.
+            const isExtraPayMonth = month === 5 || month === 11;
+            const pagaExtra = isExtraPayMonth ? baseTotal : 0;
+            const extraPayRow = document.getElementById('payrollExtraPayRow');
+            extraPayRow.classList.toggle('hidden', !isExtraPayMonth);
+            const brutoTotal = baseTotal + nightPay + totalGuardPay + extraMgPay + extraNgPay + prorrataExtra + pagaExtra + totalComplements;
 
-            const cuotaSS = brutoTotal * 0.0485;
-            const desempleo = brutoTotal * 0.0165;
+            // La cotización mensual ya contempla la prorrata; la paga extra no vuelve a cotizar en junio/diciembre.
+            const baseCotizacion = brutoTotal - pagaExtra;
+            const cuotaSS = baseCotizacion * 0.0485;
+            const desempleo = baseCotizacion * 0.0165;
             const baseIrpf = brutoTotal - prorrataExtra;
             const irpf = baseIrpf * ((cfg.irpf || 0) / 100);
 
@@ -3267,6 +3304,7 @@
             document.getElementById('valBaseSalaryTotal').innerText = baseTotal.toFixed(2) + ' €';
             document.getElementById('valBaseSalaryBreakdown').innerText = `(${(cfg.baseSalary || 0).toFixed(2)}€ + ${(cfg.carencia || 0).toFixed(2)}€ + ${(cfg.funcion || 0).toFixed(2)}€)`;
             document.getElementById('valProrrataExtra').innerText = prorrataExtra.toFixed(2) + ' €';
+            document.getElementById('valPagaExtra').innerText = pagaExtra.toFixed(2) + ' €';
             document.getElementById('countNights').innerText = nightHours;
             document.getElementById('valNights').innerText = nightPay.toFixed(2) + ' €';
             document.getElementById('valGuardias').innerText = totalGuardPay.toFixed(2) + ' €';
@@ -3313,7 +3351,7 @@
             let shiftsCount = Object.keys(availableColors).length;
             document.getElementById('shiftBgCount').innerText = shiftsCount;
 
-            Object.keys(availableColors).forEach(sCode => {
+            getOrderedShiftCodes(availableColors).forEach(sCode => {
                 const colorObj = availableColors[sCode];
                 const row = document.createElement('div');
                 row.className = "flex flex-col gap-2 bg-slate-800/60 p-3 rounded-xl border border-slate-700/60";
@@ -3793,7 +3831,7 @@
 
             const availableColors = u.colors || defaultColors;
 
-            Object.keys(availableColors).forEach(sCode => {
+            getOrderedShiftCodes(availableColors).forEach(sCode => {
                 const opt = document.createElement('option');
                 opt.value = sCode;
                 opt.innerText = shiftFullNames[sCode] || `${sCode} - Turno ${sCode}`;
