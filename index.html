@@ -3430,7 +3430,7 @@
             const u = getUser();
             if (!u.colors[code]) u.colors[code] = { ...(defaultColors[code] || {}) };
             u.colors[code][field] = value;
-            await saveDataToFirebase();
+            await saveDataToFirebase(false);
             renderCalendar();
             updateSidebar();
         }
