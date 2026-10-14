@@ -377,22 +377,21 @@ function resetInactivityTimer() {
     inactivityTimer = setTimeout(() => {
         // Solo cerrar sesión si hay un usuario activo
         if (currentUserEmail) {
-
             const Ayuda = document.getElementById('helpModal');
             const Ajustes = document.getElementById('settingsModal');
             const Admin = document.getElementById('adminAuthModal');
+            const Turnos = document.getElementById('customShiftModal');
 
             if (!document.documentElement.classList.contains('dark')) toggleDarkMode(); // Si está en modo claro
             if (!Ayuda.classList.contains('hidden')) Ayuda.classList.add('hidden'); // Cerrar panel ayuda
             if (!Ajustes.classList.contains('hidden')) Ajustes.classList.add('hidden'); // Cerrar panel ajustes
             if (!Admin.classList.contains('hidden')) Admin.classList.add('hidden'); // Cerrar panel admin
+            if (!Turnos.classList.contains('hidden')) Turnos.classList.add('hidden'); // Cerrar panel turnos
             handleLogout(); // Cerrar sesión
-
             openCustomAlertModal("Sesión Expirada", "Has sido desconectado por inactividad.");
         }
     }, timeoutMinutes);
 }
-
 // Iniciar los escuchadores de interacción del usuario
 function setupInactivityListener() {
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
