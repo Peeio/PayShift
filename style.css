@@ -489,7 +489,7 @@ html:not(.dark) input[type="file"]::file-selector-button:hover {
 }
 
 .guard-border-subtle {
-    border: 2px solid #f59e0b;
+    border: 1px solid #f59e0b;
 }
 
 /* ANIMACIÓN Y DESLIZAMIENTO DEL PANEL DE NÓMINA */
@@ -688,14 +688,21 @@ html:not(.dark) input[type="file"]::file-selector-button:hover {
         transform: scale(0.95);
     }
 
+    .header-controls-wrapper {
+        position: relative;
+    }
+
     /* Panel flotante con animación */
     .header-controls {
         position: absolute;
         top: calc(100% + 10px);
-        right: 0;
+        right: 0; /* Por defecto se alinea al borde derecho del botón */
         z-index: 1000;
 
-        width: min(230px, calc(100vw - 24px));
+        /* Ancho fijo o máximo que se adapte al espacio disponible de la pantalla */
+        width: 220px;
+        max-width: calc(100vw - 24px); /* Nunca será más ancho que la pantalla menos un margen */
+        
         padding: 10px;
         box-sizing: border-box;
 
