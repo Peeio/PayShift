@@ -56,6 +56,9 @@
                 setMenuOpen(false);
                 toggle.focus();
             }
+
+            // Quitar foco
+            if (document.activeElement) document.activeElement.blur();
         }
     });
 
@@ -790,6 +793,9 @@ window.addEventListener('keydown', (event) => {
     if (ayuda && !ayuda.classList.contains('hidden') && event.key === 'Enter') {
         event.preventDefault();
         ayuda.classList.add('hidden');
+        if (document.activeElement) {
+            document.activeElement.blur();
+        }
     }
 
     if (event.key === 'Escape' || event.key === 'Esc') {
@@ -1306,14 +1312,15 @@ function renderCalendar() {
         const shift = dayInfo.shift || '';
 
         const calculatedType = getDayType(dayDate);
-        let dayType = dayInfo.dayType || calculatedType;
+        let dayType = (dayInfo.dayType && dayInfo.dayType !== 'auto') ? dayInfo.dayType : calculatedType;
         const hasNotes = u.notes && u.notes[dateKey] && u.notes[dateKey].trim().length > 0;
 
         // Clases por defecto para días laborables normales
         let bgClass = 'bg-slate-950/10';
         let textClass = 'text-slate-300 font-bold';
-        /// *** COLORES FESTIVOS
+        const isGuardDay = ['G', 'MG', 'NG'].includes(shift);
 
+        /// *** COLORES FESTIVOS
         // Asignación de clases de Tailwind según el tipo de día
         if (dayType === 'fin-semana') {
             bgClass = 'festive-cell';
@@ -1326,15 +1333,17 @@ function renderCalendar() {
             textClass = 'text-amber-400 font-bold';
         }
 
+        let borderClass = 'border-slate-800';
+        if (isGuardDay) {
+            borderClass = 'guard-border-subtle';
+        }
+
         const isToday = (dateKey === todayStr);
         const isSelectedDay = (dateKey === selectedDayKey);
         const isSelectedRange = selectedKeys.includes(dateKey);
 
-        const isGuardDay = ['G', 'MG', 'NG'].includes(shift);
-        const guardClass = isGuardDay ? 'guard-border-subtle' : '';
-
         const dayCell = document.createElement('div');
-        let cellClasses = `calendar-day-cell aspect-square border border-slate-800 rounded-2xl p-1.5 flex flex-col justify-between cursor-pointer transition-all ${bgClass} ${guardClass}`;
+        let cellClasses = `calendar-day-cell aspect-square border ${borderClass} rounded-2xl p-1.5 flex flex-col justify-between cursor-pointer transition-all ${bgClass}`;
         if (isSelectedRange) cellClasses += ' day-selected-range';
         if (isSelectedDay && !isSelectedRange) cellClasses += ' day-selected-single';
         
