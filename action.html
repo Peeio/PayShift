@@ -150,7 +150,7 @@
                 document.getElementById('viewVerifyEmail').classList.remove('hidden');
                 try {
                     await auth.applyActionCode(actionCode);
-                    document.getElementById('verifyStatusTextinnerText').innerText = "¡Tu cuenta ha sido verificada con éxito! Ya puedes iniciar sesión.";
+                    document.getElementById('verifyStatusText').innerText = "¡Tu cuenta ha sido verificada con éxito! Ya puedes iniciar sesión.";
                 } catch (error) {
                     console.error(error);
                     document.getElementById('verifyStatusText').innerText = "El enlace de verificación ha caducado o ya ha sido utilizado.";
@@ -162,6 +162,7 @@
                 } catch (error) {
                     console.error(error);
                     openCustomAlertModal("Enlace no válido", "El enlace para restablecer la contraseña ha caducado o ya ha sido utilizado.", "Ir al Login", goToLogin);
+                    window.location.replace(RUTA_LOGIN);
                 }
             } else {
                 window.location.replace(RUTA_LOGIN);
