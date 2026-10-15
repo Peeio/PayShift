@@ -1,0 +1,899 @@
+body {
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s, color 0.3s;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* SCROLLBARS CON MARGEN PARA NO TOCAR LOS BORDES SUPERIOR/INFERIOR */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #3b82f6;
+}
+
+#yearlyView::-webkit-scrollbar-track,
+#monthlyView::-webkit-scrollbar-track {
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+    background: #2563eb;
+}
+
+html:not(.dark) body {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+/* PANEL IZQUIERDO MISMO COLOR AZUL EN MODO CLARO */
+html:not(.dark) #sidebarPanel {
+    background-color: #e0f2fe;
+    border-color: #bae6fd;
+    box-shadow: 0 4px 12px -2px rgba(100, 116, 139, 0.08);
+}
+
+html.dark #sidebarPanel {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+/* Paneles con efecto cristalino moderno */
+.main-header-block,
+#sidebarUserHeader {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+html:not(.dark) :is(#sidebarUserHeader, #foot) {
+    border-color: #bae6fd;
+}
+
+html:not(.dark) :is(#userAvatarContainer, #avatarPreview) {
+    border-color: #BAE6FD;
+}
+
+/* PANELES CENTRALES Y DERECHOS SIN SUPERPOSICIÓN GLOBAL */
+html:not(.dark) aside:not(#sidebarPanel),
+html:not(.dark) #monthlyView,
+html:not(.dark) #yearlyView,
+html:not(.dark) .main-header-block {
+    background-color: #e0f2fe;
+    border-color: #bae6fd;
+    box-shadow: 0 4px 12px -2px rgba(100, 116, 139, 0.08);
+}
+
+#monthlyView {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+#payrollPanel {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+html:not(.dark) .vs {
+    background-color: #ffffff;
+    border-color: #bae6fd;
+}
+
+.vs {
+    background-color: #020617;
+    border-color: #1E293B;
+}
+
+.yearly-month-card {
+    box-sizing: border-box;
+    padding: 0.75rem;
+    margin: 0;
+    border-radius: 1rem;
+    width: 100%;
+}
+
+html:not(.dark) .text-white,
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-300 {
+    color: #020f2cdc;
+}
+
+html:not(.dark) #PanelAdmin {
+    background-color: #e0f2fe;
+    border-color: #bae6fd;
+}
+
+html:not(.dark) #CancelarAdmin {
+    border-color: #bae6fd;
+}
+
+html:not(.dark) #ConfirmarAdmin {
+    color: white;
+}
+
+html:not(.dark) #json :is(button, label),
+html:not(.dark) #HelpOk,
+html:not(.dark) #SettingsOk,
+html:not(.dark) #AdminOk {
+    color: white;
+}
+
+html:not(.dark) .text-slate-400 {
+    color: #334155;
+}
+
+html:not(.dark) .text-slate-500 {
+    color: #475569;
+}
+
+html:not(.dark) #sideDayOfWeek {
+    color: #01579b;
+}
+
+html:not(.dark) #yearlyStatsBox,
+html:not(.dark) #shiftBgBox {
+    border: 1px solid #bae6fd;
+}
+
+html.dark #yearlyStatsBox {
+    border: 1px solid #1e293b;
+}
+
+html.dark .yearly-month-card {
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid #1e293b;
+}
+
+html:not(.dark) #yearlyGrid .text-slate-300 {
+    color: #0f172a;
+}
+
+html:not(.dark) #yearlyGrid>div {
+    border: 1px solid #bae6fd;
+}
+
+html:not(.dark) #guardOverlay {
+    background-color: #d97706;
+    color: #ffffff;
+    border-color: #b45309;
+    font-weight: 800;
+}
+
+html:not(.dark) .btn-add-shift {
+    background-color: #1e293b;
+    color: #ffffff;
+    border-color: #0f172a;
+}
+
+html:not(.dark) .btn-guard-pack {
+    background-color: #4338ca;
+    color: #ffffff;
+    border-color: #3730a3;
+}
+
+html:not(.dark) .btn-clear-month {
+    background-color: #dc2626;
+    color: #ffffff;
+    border-color: #b91c1c;
+}
+
+html:not(.dark) #sideShiftBadge {
+    background-color: #ffffff;
+    color: #0f172a;
+    border: 1px solid #bae6fd;
+    font-weight: 800;
+}
+
+#dayNotesText {
+    field-sizing: content;
+    min-height: 50px;
+    max-height: 300px;
+    height: auto;
+    resize: none;
+}
+
+html:not(.dark) #dayNotesText {
+    background-color: #ffffff;
+    color: #0f172a;
+    border: 1.5px solid #bae6fd;
+    font-weight: 600;
+    field-sizing: content;
+    min-height: 50px;
+    max-height: 300px;
+    height: auto;
+}
+
+html:not(.dark) #dayNotesText::placeholder {
+    color: #64748b;
+}
+
+html:not(.dark) #payrollMonthLabel {
+    background-color: #1e40af;
+    color: #ffffff;
+    border-color: #1e3a8a;
+    font-weight: 700;
+}
+
+html:not(.dark) .app-version-badge {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+html:not(.dark) #dayModal>div,
+html:not(.dark) #settingsModal>div,
+html:not(.dark) #customShiftModal>div,
+html:not(.dark) #addUserModal>div,
+html:not(.dark) #confirmClearMonthModal>div,
+html:not(.dark) #confirmDeleteShiftModal>div,
+html:not(.dark) #customAlertModal>div,
+html:not(.dark) #setupPayrollModal>div,
+html:not(.dark) #helpModal>div,
+html:not(.dark) #loginAlertModal>div {
+    background-color: #ffffff;
+    border-color: #cbd5e1;
+    border-radius: 1.5rem;
+}
+
+html:not(.dark) select,
+html:not(.dark) input[type="number"],
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="password"],
+html:not(.dark) input[type="email"] {
+    background-color: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+    border-radius: 0.75rem;
+}
+
+html:not(.dark) .calendar-day-cell {
+    background-color: #ffffff;
+    border-color: #bae6fd;
+    border-radius: 1rem;
+    padding: 0.375rem;
+}
+
+/* BLOQUE COPIAS DE SEGURIDAD MODO CLARO */
+html:not(.dark) #backupsList {
+    background-color: #f0f9ff;
+    border-color: #bae6fd;
+}
+
+/* Bloque JSON */
+html:not(.dark) #json {
+    background-color: #f0f9ff;
+    border-color: #bae6fd;
+}
+
+/* Bloque turno */
+html:not(.dark) #turno {
+    background-color: #f0f9ff;
+    border-color: #bae6fd;
+}
+
+/* Bloque tiempos */
+html:not(.dark) #newShiftStartTime,
+html:not(.dark) #newShiftEndTime {
+    background-color: #f0f9ff;
+    border-color: #bae6fd;
+}
+
+/* Bloque tiempos */
+html:not(.dark) #newShiftStartTime2,
+html:not(.dark) #newShiftEndTime2 {
+    background-color: white;
+    border-color: #bae6fd;
+}
+
+/* Bloque Partido (Turnos creados) */
+html:not(.dark) [id^="splitBox_"] {
+    background-color: white;
+    border-color: #bae6fd;
+}
+
+/* Franjas dentro del Bloque Partido (Turnos creados) */
+html:not(.dark) [id^="splitBox_"] input {
+    background-color: #f0f9ff;
+    border-color: #bae6fd;
+}
+
+/* Bloque Franja (Primera en modificar turnos) */
+html:not(.dark) [id^="franja"] {
+    background-color: white;
+    border-color: #bae6fd;
+}
+
+/* Bloque Partido al crear turno */
+html:not(.dark) #newShiftSplitTimeBox {
+    background-color: #f0f9ff;
+    border-color: #bae6fd;
+}
+
+/* CONTRASTE MEJORADO EN BLOQUE NÓMINA EN MODO CLARO Y PANEL DE SELECCIÓN MÚLTIPLE */
+html:not(.dark) .payroll-box {
+    background-color: #ffffff;
+    border-color: #bae6fd;
+    border-radius: 1rem;
+}
+
+html:not(.dark) .payroll-box .payroll-label,
+html:not(.dark) .payroll-box .payroll-value {
+    color: #1e293b;
+}
+
+html:not(.dark) .payroll-box .payroll-val {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+html:not(.dark) .payroll-subtext {
+    color: #475569;
+}
+
+html:not(.dark) #rangeActionBar {
+    background-color: #e0f2fe;
+    border-color: #0284c7;
+    color: #0369a1;
+}
+
+html:not(.dark) #rangeActionBar select {
+    background-color: #ffffff;
+    color: #0f172a;
+    border-color: #7dd3fc;
+}
+
+html:not(.dark) #rangeActionBar button.text-slate-300 {
+    color: #0369a1;
+}
+
+html:not(.dark) #rangeActionBar button.text-slate-300:hover {
+    color: #0c4a6e;
+}
+
+html:not(.dark) #headerMenuToggle {
+    background-color: #ffffff;
+    border-color: #bae6fd;
+}
+
+html:not(.dark) #headerControls {
+    background-color: #e0f2fe;
+}
+
+#monthlyView > div {
+    border-color: #334155 !important;
+}
+
+html:not(.dark) #monthlyView > div {
+    border-color: #bae6fd !important;
+}
+
+.btn-view-toggle {
+    border-radius: 0.5rem;
+    border-width: 1px;
+    box-sizing: border-box;
+}
+
+html:not(.dark) #btnTogglePayroll {
+    background-color: #6293ff;
+    border-color: #679df5
+}
+
+.btn-view-toggle.bg-blue-600,
+#authPrimaryBtn {
+    box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.4);
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+input[type="file"]::file-selector-button {
+    border-radius: 0.5rem;
+    margin-right: 0.5rem;
+    border: 1px solid #475569;
+    background-color: #1e293b;
+    color: #f8fafc;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-sizing: border-box;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background-color: #334155;
+}
+
+html:not(.dark) input[type="file"]::file-selector-button {
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    color: #0f172a;
+}
+
+html:not(.dark) input[type="file"]::file-selector-button:hover {
+    background-color: #f1f5f9;
+}
+
+.select-none {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.shift-bg-container {
+    transition: all 0.5s ease;
+    background-size: cover;
+    background-position: center;
+}
+
+.sidebar-bg-default {
+    background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+}
+
+.sidebar-bg-M {
+    background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+}
+
+.sidebar-bg-T {
+    background: linear-gradient(180deg, #fb923c 0%, #c2410c 100%);
+}
+
+.sidebar-bg-N {
+    background: linear-gradient(180deg, #312e81 0%, #0f172a 100%);
+}
+
+.day-today-subtle {
+    background-color: #2563eb;
+    color: #ffffff;
+    border-radius: 8px;
+    width: clamp(20px, 1.6vw, 28px);
+    height: clamp(20px, 1.6vw, 28px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.day-selected-range {
+    outline: 2px solid #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+.day-selected-single {
+    outline: 2px solid #eab308 !important;
+    box-shadow: 0 0 8px rgba(234, 179, 8, 0.5) !important;
+}
+
+.guard-border-subtle {
+    border: 1px solid #f59e0b;
+}
+
+/* ANIMACIÓN Y DESLIZAMIENTO DEL PANEL DE NÓMINA */
+.payroll-panel-container {
+    transition: transform 0.3s ease-in-out,
+        max-width 0.3s ease-in-out,
+        max-height 0.3s ease-in-out,
+        opacity 0.3s ease-in-out,
+        margin 0.3s ease-in-out;
+}
+
+.payroll-hidden {
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* Grupo de controles de la cabecera */
+.header-controls-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+#headerControls {
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+#headerControls.hidden {
+    display: none !important;
+}
+
+/* Menú móvil oculto en escritorio */
+.header-menu-toggle {
+    display: none;
+}
+
+/* Acciones visibles en escritorio */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Evitar que Mensual y Anual se compriman */
+#viewToggleContainer {
+    flex-shrink: 0;
+}
+
+#btnViewMonth,
+#btnViewYear {
+    white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+    #iconTogglePayroll2 {
+        display: none;
+    }
+
+    footer {
+        display: none;
+    }
+
+    #headerControls {
+        display: flex !important;
+        /* Siempre visible en fila horizontal en PC */
+    }
+}
+
+@media (max-width: 1023px) {
+
+    /* 1. Desbloqueamos la altura estricta del contenedor principal en móvil */
+    #appLayout {
+        height: auto !important;
+    }
+
+    /* 2. Panel Izquierdo: Compacto y ajustado a su contenido */
+    #sidebarPanel {
+        height: fit-content;
+        flex-shrink: 0;
+    }
+
+    /* 3. Panel Central: Altura natural para que el calendario conserve sus proporciones */
+    main {
+        flex-shrink: 0;
+        height: auto;
+    }
+
+    #monthlyView {
+        min-height: fit-content;
+        /* Garantiza que el calendario no se estruje */
+        height: auto;
+    }
+
+    /* 4. Panel de Nómina (Derecho): Transición de altura sin encoger el panel central */
+    .payroll-panel-container {
+        flex-shrink: 0;
+        transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin 0.3s ease-in-out, padding 0.3s ease-in-out;
+    }
+
+    /* Estado Oculto en Móvil: Ocupa 0px y es invisible */
+    .payroll-hidden {
+        max-height: 0px !important;
+        opacity: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-top: 0 !important;
+        border: none !important;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    /* Estado Visible en Móvil: Crece hacia abajo sumándose al scroll */
+    #payrollPanel:not(.payroll-hidden) {
+        max-height: 1000px;
+        /* Límite holgado para permitir la animación de despliegue */
+        opacity: 1 !important;
+        pointer-events: auto;
+    }
+
+    #turnodia {
+        display: none;
+    }
+
+    #diames {
+        display: flex;
+        /* Alinea los hijos en línea (fila) */
+        justify-content: space-between;
+        /* Empuja un elemento a cada extremo */
+        align-items: center;
+        /* Opcional: centra los elementos verticalmente */
+    }
+
+    #dayNotesText {
+        field-sizing: content;
+        min-height: 30px;
+        max-height: 60px;
+        height: auto;
+        resize: none;
+    }
+
+    html:not(.dark) #dayNotesText {
+        background-color: #ffffff;
+        color: #0f172a;
+        border: 1.5px solid #bae6fd;
+        font-weight: 600;
+        field-sizing: content;
+        min-height: 30px;
+        max-height: 60px;
+        height: auto;
+    }
+
+    #iconTogglePayroll {
+        display: none;
+    }
+
+    #foot {
+        display: none;
+    }
+
+    #shiftBgBox {
+        padding-bottom: 0;
+    }
+
+    #sidebarPanel {
+        padding-bottom: 0.375rem;
+    }
+
+    .header-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 28px;
+        padding: 0;
+        flex-shrink: 0;
+
+        color: white;
+        background: rgb(30 41 59 / 85%);
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 10px;
+        cursor: pointer;
+
+        transition: background 180ms ease,
+            transform 180ms ease;
+    }
+
+    .header-menu-toggle:hover {
+        background: rgb(51 65 85 / 95%);
+    }
+
+    .header-menu-toggle:active {
+        transform: scale(0.95);
+    }
+
+    .header-controls-wrapper {
+        position: relative;
+    }
+
+    /* Panel flotante con animación */
+    .header-controls {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0; /* Por defecto se alinea al borde derecho del botón */
+        z-index: 1000;
+
+        /* Ancho fijo o máximo que se adapte al espacio disponible de la pantalla */
+        width: 220px;
+        max-width: calc(100vw - 24px); /* Nunca será más ancho que la pantalla menos un margen */
+        
+        padding: 10px;
+        box-sizing: border-box;
+
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+
+        background: rgb(15 23 42 / 97%);
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+        backdrop-filter: blur(18px);
+
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-8px) scale(0.98);
+        transform-origin: top right;
+
+        transition:
+            opacity 180ms ease,
+            transform 180ms ease,
+            visibility 180ms ease;
+    }
+
+    /* Estado abierto */
+    .header-controls.is-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+    }
+
+    /* Botones dentro del panel */
+    .header-controls>button {
+        width: 100%;
+        min-height: 36px;
+        height: 36px;
+        box-sizing: border-box;
+        justify-content: flex-start;
+        white-space: nowrap;
+    }
+
+    #headerControls {
+        display: none;
+        /* Oculto por defecto en móvil */
+    }
+
+    #headerControls.open {
+        display: flex !important;
+        /* Se muestra en columna cuando se hace clic */
+    }
+}
+
+/* Respetar movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+
+    .header-controls,
+    .header-menu-toggle {
+        transition: none;
+    }
+}
+
+@keyframes shake {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    20% {
+        transform: rotate(-12deg);
+    }
+
+    40% {
+        transform: rotate(12deg);
+    }
+
+    60% {
+        transform: rotate(-8deg);
+    }
+
+    80% {
+        transform: rotate(8deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+/* Aplica la animación al icono cuando se hace hover en el botón */
+.btn-clear-month:hover [data-lucide="trash-2"] {
+    animation: shake 0.4s ease-in-out;
+}
+
+/* Animaciones de cambio de mes */
+.slide-left-out {
+    animation: slideLeftOut 0.10s forwards ease-in-out;
+}
+
+.slide-left-in {
+    animation: slideLeftIn 0.10s forwards ease-in-out;
+}
+
+.slide-right-out {
+    animation: slideRightOut 0.10s forwards ease-in-out;
+}
+
+.slide-right-in {
+    animation: slideRightIn 0.10s forwards ease-in-out;
+}
+
+@keyframes slideLeftOut {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+@keyframes slideLeftIn {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideRightOut {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes slideRightIn {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Estilo para fines de semana */
+.festive-cell {
+    background-color: rgba(76, 5, 25, 0.2);
+}
+
+html:not(.dark) .festive-cell {
+    background-color: #ffe4e6;
+    border-color: #fecdd3;
+}
+
+/* Estilo para festivos normales */
+.festivo-oficial {
+    background-color: rgba(59, 7, 100, 0.2);
+}
+
+html:not(.dark) .festivo-oficial {
+    background-color: #f3e8ff; /* Púrpura muy claro, suave para el fondo */
+    border-color: #e9d5ff;
+}
+
+/* Estilo para festivos especiales (5 ene, 3 dic, 24 dic, 31 dic) */
+.festivo-especial {
+    background-color: rgba(249, 115, 22, 0.2);
+}
+
+html:not(.dark) .festivo-especial {
+    background-color: #ffedd5; /* Naranja muy claro, suave para el fondo */
+    border-color: #fed7aa;
+}
+
+html:not(.dark) #irdia {
+    border-color: #bae6fd;
+    background-color: white;
+}
