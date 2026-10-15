@@ -150,6 +150,7 @@ let backupsHistory = [];
 
 let pendingAvatarBase64 = null;
 let pendingShiftBackgrounds = {};
+let pendingShiftSplits = {};
 
 function togglePasswordVisibility(inputId, btn) {
     const pwdInput = document.getElementById(inputId);
@@ -333,11 +334,11 @@ async function saveShiftFullNames() {
 
 /// *** COLORES POR DEFECTO
 const defaultColors = {
-    M: { bg: '#38bdf8', text: '#000000', border: '#0284c7', startTime: '06:00', endTime: '14:00' },
-    T: { bg: '#fb923c', text: '#000000', border: '#f97316', startTime: '14:00', endTime: '22:00' },
+    M: { bg: '#38bdf8', text: '#ffffff', border: '#0284c7', startTime: '06:00', endTime: '14:00' },
+    T: { bg: '#fb923c', text: '#ffffff', border: '#f97316', startTime: '14:00', endTime: '22:00' },
     N: { bg: '#4338ca', text: '#ffffff', border: '#3730a3', startTime: '22:00', endTime: '06:00' },
     G: { bg: '#f59e0b', text: '#ffffff', border: '#d97706' },
-    MG: { bg: '#38bdf8', text: '#000000', border: '#f59e0b', startTime: '06:00', endTime: '14:00' },
+    MG: { bg: '#38bdf8', text: '#ffffff', border: '#f59e0b', startTime: '06:00', endTime: '14:00' },
     NG: { bg: '#4338ca', text: '#ffffff', border: '#f59e0b', startTime: '14:00', endTime: '22:00' },
     E: { bg: '#6b7280', text: '#ffffff', border: '#4b5563' },
     B: { bg: '#a855f7', text: '#ffffff', border: '#9333ea' },
@@ -392,6 +393,7 @@ function resetInactivityTimer() {
         }
     }, timeoutMinutes);
 }
+
 // Iniciar los escuchadores de interacción del usuario
 function setupInactivityListener() {
     const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
@@ -900,9 +902,20 @@ async function completeSetupPayroll(baseSalary, carencia, funcion, prorrataExtra
     showAppLayout();
 }
 
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const LoginAlert = document.getElementById('loginAlertModal');
+        // Comprobamos si la alerta está visible en pantalla para cerrarla
+        if (LoginAlert && !LoginAlert.classList.contains('hidden')) {
+            closeLoginAlertModal(); // Reemplaza con tu función real para ocultar la alerta
+        }
+    }
+});
+
 function openLoginAlertModal(msg) {
     if (msg) document.getElementById('loginAlertText').innerText = msg;
     document.getElementById('loginAlertModal').classList.remove('hidden');
+    document.getElementById('loginAlertModal').focus();
 }
 function closeLoginAlertModal() { document.getElementById('loginAlertModal').classList.add('hidden'); }
 
@@ -935,6 +948,7 @@ function closeConfirmDeleteShiftModal() {
 async function handleLogout() {
     clearTimeout(inactivityTimer); // Limpiar el timer
     try {
+        if (!document.documentElement.classList.contains('dark')) toggleDarkMode();
         await firebase.auth().signOut();
         currentUserEmail = null;
 
@@ -1353,7 +1367,7 @@ function renderCalendar() {
                 timeText1 = ` (${c.startTime})`;
             }
 
-            const badge1 = `<span class="py-0.5 text-[clamp(0.6rem,0.7vw,0.85rem)] font-extrabold px-1 rounded text-center block shadow-sm leading-none" style="background-color:${c.bg}; color:${c.text}; border:1px solid ${c.border}">${shift}${timeText1}</span>`;
+            const badge1 = `<span class="py-0.5 text-[clamp(0.6rem,0.7vw,0.85rem)] font-extrabold px-1 rounded text-center block shadow-sm leading-none" style="background-color:${c.bg}; color:${c.text}; border:1px solid ${c.border}">${shift}<span class="hidden sm:inline">${timeText1}</span></span>`;
 
             // Si el usuario marcó este turno como partido (2 franjas)
             if (c.isSplit) {
@@ -1364,7 +1378,7 @@ function renderCalendar() {
                     timeText2 = ` (${c.startTime2})`;
                 }
 
-                const badge2 = `<span class="py-0.5 text-[clamp(0.6rem,0.7vw,0.85rem)] font-extrabold px-1 rounded text-center block shadow-sm leading-none" style="background-color:${c.bg}; color:${c.text}; border:1px solid ${c.border}">${shift}${timeText2}</span>`;
+                const badge2 = `<span class="py-0.5 text-[clamp(0.6rem,0.7vw,0.85rem)] font-extrabold px-1 rounded text-center block shadow-sm leading-none" style="background-color:${c.bg}; color:${c.text}; border:1px solid ${c.border}">${shift}<span class="hidden sm:inline">${timeText2}</span></span>`;
 
                 shiftBadgeHtml = `<div class="my-auto py-0.5 space-y-1">${badge1}${badge2}</div>`;
             } else {
@@ -1378,8 +1392,8 @@ function renderCalendar() {
                             <span class="${isToday ? 'day-today-subtle' : textClass}">${day}</span>
                             ${hasNotes ? '<span class="w-1.5 h-1.5 2xl:w-2 2xl:h-2 rounded-full bg-amber-400 inline-block" title="Tiene nota"></span>' : ''}
                         </div>
-                        ${dayType === 'festivo' ? `<span class="text-[clamp(0.5rem,0.6vw,0.75rem)] text-purple-400 font-semibold">festiv</span>` : ''}
-                        ${dayType === 'festivo-especial' ? '<span class="text-[clamp(0.5rem,0.6vw,0.75rem)] text-orange-400 font-semibold">especial</span>' : ''}
+                        ${dayType === 'festivo' ? `<span class="text-[clamp(0.5rem,0.6vw,0.75rem)] text-purple-400 font-semibold"><span class="inline sm:hidden">FES</span><span class="hidden sm:inline">FESTIVO</span></span>` : ''}
+                        ${dayType === 'festivo-especial' ? `<span class="text-[clamp(0.5rem,0.6vw,0.75rem)] text-orange-400 font-semibold"><span class="inline sm:hidden">ESP</span><span class="hidden sm:inline">ESPECIAL</span></span>` : ''}
                     </div>
                     ${shiftBadgeHtml}
                 `;
@@ -1985,7 +1999,9 @@ function renderExistingShiftsColorList() {
         const hasImg = !!(u.customImages && u.customImages[sCode]);
         const startTime = colorObj.startTime || '';
         const endTime = colorObj.endTime || '';
-        const isSplit = !!(colorObj.isSplit);
+        const isSplit = (typeof pendingShiftSplits !== 'undefined' && pendingShiftSplits[sCode] !== undefined)
+            ? pendingShiftSplits[sCode]
+            : !!(colorObj.isSplit);
         const startTime2 = colorObj.startTime2 || '';
         const endTime2 = colorObj.endTime2 || '';
 
@@ -2065,17 +2081,19 @@ async function updateShiftTime(code, field, value) {
     updateSidebar();
 }
 
-async function toggleShiftSplit(code, isChecked) {
-    const u = getUser();
-    if (!u.colors[code]) u.colors[code] = { ...(defaultColors[code] || {}) };
-    u.colors[code].isSplit = isChecked;
+function toggleShiftSplit(code, isChecked) {
+    if (typeof pendingShiftSplits === 'undefined') {
+        pendingShiftSplits = {};
+    }
+    
+    // Guardamos el cambio temporalmente en el borrador
+    pendingShiftSplits[code] = isChecked;
 
+    // Control visual de la 2ª franja dentro del modal
     const box = document.getElementById(`splitBox_${code}`);
     if (box) box.classList.toggle('hidden', !isChecked);
 
-    await saveDataToFirebase(false);
-    renderCalendar();
-    updateSidebar();
+    console.log(`-> Turno [${code}] marcado como partido (${isChecked}) en borrador.`);
 }
 
 async function updateShiftCode(oldCode, newCode) {
@@ -2380,6 +2398,7 @@ function openCustomShiftModal() {
 }
 
 function closeCustomShiftModal() {
+    pendingShiftSplits = {};
     document.getElementById('customShiftModal').classList.add('hidden');
 }
 
@@ -2569,6 +2588,18 @@ async function confirmAdminRestore() {
 async function saveSettings() {
     const u = getUser();
  
+    if (typeof pendingShiftSplits !== 'undefined' && Object.keys(pendingShiftSplits).length > 0) {
+        if (!u.colors) u.colors = {};
+        
+        for (const [code, isSplitValue] of Object.entries(pendingShiftSplits)) {
+            if (!u.colors[code]) {
+                u.colors[code] = { ...(defaultColors[code] || {}) };
+            }
+            u.colors[code].isSplit = isSplitValue;
+        }
+        pendingShiftSplits = {}; // Limpiamos el borrador
+    }
+
     if (typeof pendingShiftBackgrounds !== 'undefined' && Object.keys(pendingShiftBackgrounds).length > 0) {
         if (!u.customImages) u.customImages = {};
         
@@ -2815,7 +2846,7 @@ function goToToday() {
 }
 
 // Función para comprimir y redimensionar cualquier archivo de imagen a Base64 ligero
-function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.7) {
+function compressImage(file, maxWidth = 900, maxHeight = 1600, quality = 0.90) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -2842,6 +2873,8 @@ function compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.7) {
                 canvas.height = height;
 
                 const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(img, 0, 0, width, height);
 
                 // Convertir a JPEG comprimido en Base64
