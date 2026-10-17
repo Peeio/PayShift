@@ -697,6 +697,12 @@ async function handleAuthAction(event) {
 
 async function handleGoogleLogin() {
     showLoading();
+
+	// 2. Ocultar el login de inmediato para que no se vea por debajo
+    const authScreen = document.getElementById('authScreen');
+    if (authScreen) {
+        authScreen.classList.add('hidden');
+    }
 	
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
