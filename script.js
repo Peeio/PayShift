@@ -442,67 +442,52 @@ function init() {
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
         .then(() => {
             firebase.auth().onAuthStateChanged(async (authUser) => {
-                if (isRegisteringProcess) return;
+    if (isRegisteringProcess) return;
 
-                if (authUser) {
+    try {
+        if (authUser) {
+            if (authUser.email && !authUser.emailVerified) {
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('appLayout').classList.add('hidden');
+                await firebase.auth().signOut();
+                openCustomAlertModal("Correo no verificado", "Por favor, verifique su correo electrónico antes de continuar.");
+                return;
+            }
 
-                    // Si el usuario requiere verificación por correo y NO está verificado:
-                    if (authUser.email && !authUser.emailVerified) {
-                        document.getElementById('authScreen').classList.remove('hidden');
-                        document.getElementById('appLayout').classList.add('hidden');
-                        document.getElementById('setupPayrollModal')?.classList.add('hidden');
+            const uid = authUser.uid;
+            currentUserEmail = uid;
 
-                        // Cerrar la sesión activa para evitar bucles
-                        await firebase.auth().signOut();
-                        hideLoading();
-                        openCustomAlertModal("Correo no verificado", "Por favor, verifique su correo electrónico antes de continuar.");
-                        return;
-                    }
+            const loadSuccess = await loadDataFromFirebase(false);
 
-                    const uid = authUser.uid;
-                    currentUserEmail = uid;
+            if (!appData[uid]) {
+                appData[uid] = createNewUserObj(
+                    authUser.displayName || "Usuario",
+                    authUser.email || ""
+                );
+                await saveDataToFirebase(false);
+            }
 
-                    // 1. Cargar datos desde Firestore en segundo plano
-                    const loadSuccess = await loadDataFromFirebase(false);
+            showAppLayout();
 
-                    // 2. Si NO existen datos, los creamos un objeto base para no bloquear la UI
-                    if (!appData[uid]) {
-                        appData[uid] = createNewUserObj(
-                            authUser.displayName || "Usuario",
-                            authUser.email || ""
-                        );
-                    }
+            if (!appData[uid]?.isPayrollConfigured) {
+                openSetupPayrollModal();
+            } else {
+                document.getElementById('setupPayrollModal')?.classList.add('hidden');
+            }
 
-                    // 3. Mostrar la aplciación de fondo
-                    showAppLayout();
+            calculatePayroll();
+            renderCalendar();
 
-                    // 4. Decidir qué vista mostrar una vez obtenidos los datos completos
-                    if (!appData[uid]?.isPayrollConfigured) {
-                        openSetupPayrollModal();
-                    } else {
-                        document.getElementById('setupPayrollModal')?.classList.add('hidden');
-                    }
-
-		    calculatePayroll();
-		    renderCalendar();
-
-                } else {
-                    // Solo si Firebase confirma que NO hay sesión, mostramos el Login
-                    document.getElementById('appLayout').classList.add('hidden');
-                    document.getElementById('setupPayrollModal')?.classList.add('hidden');
-                }
-
-                // Ocultar la pantalla de carga UNA VEZ completada la autenticación
-                lucide.createIcons();
-				document.getElementById('authScreen').classList.remove('hidden');
-                hideLoading();
-            });
-        })
-        .catch((error) => {
-            console.error("Error al configurar persistencia:", error);
+        } else {
+            document.getElementById('appLayout').classList.add('hidden');
+            document.getElementById('setupPayrollModal')?.classList.add('hidden');
             document.getElementById('authScreen').classList.remove('hidden');
-            hideLoading();
-        });
+        }
+    } finally {
+        lucide.createIcons();
+        hideLoading(); // El loader se apaga aquí de forma centralizada y segura
+    }
+});
 
     lucide.createIcons();
 
@@ -696,55 +681,17 @@ async function handleAuthAction(event) {
 
 
 async function handleGoogleLogin() {
+    // 1. Mostrar el telón de carga y ocultar el login al instante
     showLoading();
-
-	// 2. Ocultar el login de inmediato para que no se vea por debajo
     const authScreen = document.getElementById('authScreen');
     if (authScreen) {
         authScreen.classList.add('hidden');
     }
-	
+
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
-        // 1. Abrir ventana emergente de Google
-        const result = await firebase.auth().signInWithPopup(provider);
-        const authUser = result.user;
-
-        currentUserEmail = authUser.uid;
-
-        // 2. Cargar los datos existentes del usuario desde Firebase
-        const loadSuccess = await loadDataFromFirebase();
-
-        // 3. Verificar si el usuario ya existe en Firestore
-        const userRef = db.collection('user').doc(authUser.uid);
-        const docSnap = await userRef.get();
-
-        // 4. Si no existe en la base de datos (primer inicio de sesión), crearlo
-        if (!loadSuccess || !appData[currentUserEmail]) {
-            appData[currentUserEmail] = createNewUserObj(
-                authUser.displayName || "Usuario Google",
-                authUser.email || ""
-            );
-            await saveDataToFirebase(false);
-        }
-
-        createAutoBackup(`Inicio con Google (${CURRENT_APP_VERSION})`);
-
-        // 5. Ocultar el login y mostrar la app
-        document.getElementById('authScreen')?.classList.add('hidden');
-        showAppLayout();
-
-        // Validar configuración de nómina
-        if (!appData[currentUserEmail].isPayrollConfigured) {
-            openSetupPayrollModal();
-        } else {
-            document.getElementById('setupPayrollModal')?.classList.add('hidden');
-        }
-
-        // Renderizado explícito de vistas
-        if (typeof renderCalendar === 'function') renderCalendar();
-        if (typeof updateSidebar === 'function') updateSidebar();
-        if (window.lucide) lucide.createIcons();
+        // 2. Solo abrimos el popup. OnAuthStateChanged detectará el éxito automáticamente.
+        await firebase.auth().signInWithPopup(provider);
     }
     catch (err) {
         console.error("Error en Google Sign-In:", err);
@@ -752,12 +699,15 @@ async function handleGoogleLogin() {
         if (err.code === 'auth/popup-closed-by-user') {
             errorMsg = "Has cerrado la ventana de inicio de sesión.";
         }
-        openCustomAlertModal("Error de Acceso", errorMsg);
-    } finally {
-        // 6. Ocultar el loader solo al final de todo el proceso
+        // Si hay error, restauramos el login y quitamos el loader
+        if (authScreen) authScreen.classList.remove('hidden');
         hideLoading();
-    }
+        openCustomAlertModal("Error de Acceso", errorMsg);
+    } 
+    // Nota: Ya no ponemos hideLoading() aquí en el finally si el usuario tuvo éxito, 
+    // porque dejamos que onAuthStateChanged se encargue de apagar el loader cuando termine de cargar los datos.
 }
+
 async function handlePasswordReset() {
     const emailInput = document.getElementById('authEmail');
     const email = emailInput ? emailInput.value.trim() : '';
