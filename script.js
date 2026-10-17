@@ -695,6 +695,11 @@ async function handleGoogleLogin() {
         // Mostramos el loader inmediatamente al hacer clic para cubrir el parpadeo
         loader.classList.remove('opacity-0', 'pointer-events-none');
     }
+	// 2. Ocultar la pantalla de login de inmediato por seguridad visual
+    const authScreen = document.getElementById('authScreen');
+    if (authScreen) {
+        authScreen.classList.add('hidden');
+    }
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
         // 1. Abrir ventana emergente de Google
