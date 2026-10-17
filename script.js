@@ -405,6 +405,12 @@ function setupInactivityListener() {
 }
 
 // Llama a setupInactivityListener() dentro de showAppLayout() o cuando inicie sesión.
+function showLoading() {
+    const loader = document.getElementById('appLoadingOverlay');
+    if (loader) {
+        loader.classList.remove('hidden');
+    }
+}
 
 function hideLoading() {
     const loader = document.getElementById('appLoadingOverlay');
@@ -690,12 +696,8 @@ async function handleAuthAction(event) {
 
 
 async function handleGoogleLogin() {
-    const loader = document.getElementById('appLoadingOverlay');
-    if (loader) {
-        // Aseguramos que el loader se muestre sobre todo lo demás
-        loader.classList.remove('opacity-0', 'pointer-events-none');
-    }
-
+    showLoading();
+	
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
         // 1. Abrir ventana emergente de Google
