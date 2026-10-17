@@ -2789,6 +2789,11 @@ async function saveSettings() {
                 u.colors[code] = { ...(defaultColors[code] || {}) };
             }
             u.colors[code].isSplit = isSplitValue;
+			if (!isSplitValue) {
+                delete u.colors[code].isSplit;
+                delete u.colors[code].startTime2;
+                delete u.colors[code].endTime2;
+            }
         }
         pendingShiftSplits = {}; // Limpiamos el borrador
     }
