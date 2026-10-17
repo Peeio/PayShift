@@ -1025,14 +1025,17 @@ function getUser() {
 
 // Función para guardar los datos del usuario actual en Firebase Firestore
 async function saveDataToFirebase(showAlert = true, updatedUser = null) {
-    if (!currentUserEmail) return;
+    const authUser = firebase.auth().currentUser;
+    const activeId = authUser ? authUser.uid : currentUserEmail;
+    if (!activeId) return;
+
     try {
-        const userRef = db.collection('user').doc(currentUserEmail);
+        const userRef = db.collection('user').doc(activeId);
 
         if (updatedUser) {
             appData[currentUserEmail] = updatedUser;
         }
-        const userData = appData[currentUserEmail] || {};
+        const userData = appData[activeId] || {};
 
         await userRef.update({
             appData: userData,
@@ -1056,9 +1059,12 @@ async function saveDataToFirebase(showAlert = true, updatedUser = null) {
 
 // Función para cargar los datos del usuario desde Firebase Firestore
 async function loadDataFromFirebase() {
-    if (!currentUserEmail) return false;
+    const authUser = firebase.auth().currentUser;
+    const activeId = authUser ? authUser.uid : currentUserEmail;
+    if (!activeId) return false;
+
     try {
-        const userDocRef = db.collection('user').doc(currentUserEmail);
+        const userDocRef = db.collection('user').doc(activeId);
         const docSnap = await userDocRef.get();
 
         if (docSnap.exists) {
@@ -1068,7 +1074,8 @@ async function loadDataFromFirebase() {
                 return false;
             }
 
-            appData[currentUserEmail] = data.appData;
+            appData[activeId] = data.appData;
+	    currentUserEmail = activeId;
 
 	    getUser();
 
