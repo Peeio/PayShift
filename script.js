@@ -406,19 +406,17 @@ function setupInactivityListener() {
 
 // Llama a setupInactivityListener() dentro de showAppLayout() o cuando inicie sesión.
 
+function hideLoading() {
+    const loader = document.getElementById('appLoadingOverlay');
+    if (loader) {
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => loader.remove(), 300); // Lo elimina del DOM tras la animación
+    }
+}
+
 function init() {
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('appLayout').classList.remove('hidden');
-
-    const hideLoading = () => {
-
-        const loader = document.getElementById('appLoadingOverlay');
-
-        if (loader) {
-            loader.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => loader.remove(), 300); // Lo elimina del DOM tras la animación
-        }
-    };
 
     if (!isPayrollVisible) {
         const payroll = document.getElementById('payrollPanel');
@@ -695,6 +693,11 @@ async function handleAuthAction(event) {
 
 
 async function handleGoogleLogin() {
+    const loader = document.getElementById('appLoadingOverlay');
+    if (loader) {
+        // Mostramos el loader inmediatamente al hacer clic para cubrir el parpadeo
+        loader.classList.remove('opacity-0', 'pointer-events-none');
+    }
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
         // 1. Abrir ventana emergente de Google
@@ -743,6 +746,8 @@ async function handleGoogleLogin() {
             errorMsg = "Has cerrado la ventana de inicio de sesión.";
         }
         openCustomAlertModal("Error de Acceso", errorMsg);
+    } finally {
+	hideLoading();
     }
 }
 
