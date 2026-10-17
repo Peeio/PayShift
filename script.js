@@ -410,7 +410,7 @@ function hideLoading() {
     const loader = document.getElementById('appLoadingOverlay');
     if (loader) {
         loader.classList.add('opacity-0', 'pointer-events-none');
-        setTimeout(() => loader.remove(), 300); // Lo elimina del DOM tras la animación
+       // setTimeout(() => loader.remove(), 300); // No se elimina para mostrarlo después
     }
 }
 
