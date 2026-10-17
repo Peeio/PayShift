@@ -490,11 +490,11 @@ function init() {
                     // Solo si Firebase confirma que NO hay sesión, mostramos el Login
                     document.getElementById('appLayout').classList.add('hidden');
                     document.getElementById('setupPayrollModal')?.classList.add('hidden');
-                    document.getElementById('authScreen').classList.remove('hidden');
                 }
 
                 // Ocultar la pantalla de carga UNA VEZ completada la autenticación
                 lucide.createIcons();
+				document.getElementById('authScreen').classList.remove('hidden');
                 hideLoading();
             });
         })
