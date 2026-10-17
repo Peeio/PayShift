@@ -421,6 +421,9 @@ function hideLoading() {
 }
 
 function init() {
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('appLayout').classList.remove('hidden');
+
     if (!isPayrollVisible) {
         const payroll = document.getElementById('payrollPanel');
         const icon = document.getElementById('iconTogglePayroll');
@@ -442,55 +445,69 @@ function init() {
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
         .then(() => {
             firebase.auth().onAuthStateChanged(async (authUser) => {
-    if (isRegisteringProcess) return;
+                if (isRegisteringProcess) return;
 
-    try {
-        if (authUser) {
-            if (authUser.email && !authUser.emailVerified) {
-                document.getElementById('authScreen').classList.remove('hidden');
-                document.getElementById('appLayout').classList.add('hidden');
-                await firebase.auth().signOut();
-                openCustomAlertModal("Correo no verificado", "Por favor, verifique su correo electrónico antes de continuar.");
-                return;
-            }
+                if (authUser) {
 
-            const uid = authUser.uid;
-            currentUserEmail = uid;
+                    // Si el usuario requiere verificación por correo y NO está verificado:
+                    if (authUser.email && !authUser.emailVerified) {
+                        document.getElementById('authScreen').classList.remove('hidden');
+                        document.getElementById('appLayout').classList.add('hidden');
+                        document.getElementById('setupPayrollModal')?.classList.add('hidden');
 
-            const loadSuccess = await loadDataFromFirebase(false);
+                        // Cerrar la sesión activa para evitar bucles
+                        await firebase.auth().signOut();
+                        hideLoading();
+                        openCustomAlertModal("Correo no verificado", "Por favor, verifique su correo electrónico antes de continuar.");
+                        return;
+                    }
 
-            if (!appData[uid]) {
-                appData[uid] = createNewUserObj(
-                    authUser.displayName || "Usuario",
-                    authUser.email || ""
-                );
-                await saveDataToFirebase(false);
-            }
+                    const uid = authUser.uid;
+                    currentUserEmail = uid;
 
-            showAppLayout();
+                    // 1. Cargar datos desde Firestore en segundo plano
+                    const loadSuccess = await loadDataFromFirebase(false);
 
-            if (!appData[uid]?.isPayrollConfigured) {
-                openSetupPayrollModal();
-            } else {
-                document.getElementById('setupPayrollModal')?.classList.add('hidden');
-            }
+                    // 2. Si NO existen datos, los creamos un objeto base para no bloquear la UI
+                    if (!appData[uid]) {
+                        appData[uid] = createNewUserObj(
+                            authUser.displayName || "Usuario",
+                            authUser.email || ""
+                        );
+                    }
+
+                    // 3. Mostrar la aplciación de fondo
+                    showAppLayout();
+
+                    // 4. Decidir qué vista mostrar una vez obtenidos los datos completos
+                    if (!appData[uid]?.isPayrollConfigured) {
+                        openSetupPayrollModal();
+                    } else {
+                        document.getElementById('setupPayrollModal')?.classList.add('hidden');
+                    }
 
             calculatePayroll();
             renderCalendar();
 
-        } else {
-            document.getElementById('appLayout').classList.add('hidden');
-            document.getElementById('setupPayrollModal')?.classList.add('hidden');
+                } else {
+                    // Solo si Firebase confirma que NO hay sesión, mostramos el Login
+                    document.getElementById('appLayout').classList.add('hidden');
+                    document.getElementById('setupPayrollModal')?.classList.add('hidden');
+                    document.getElementById('authScreen').classList.remove('hidden');
+                }
+
+                // Ocultar la pantalla de carga UNA VEZ completada la autenticación
+                lucide.createIcons();
+                hideLoading();
+            });
+        })
+        .catch((error) => {
+            console.error("Error al configurar persistencia:", error);
             document.getElementById('authScreen').classList.remove('hidden');
-        }
-    } finally {
-        lucide.createIcons();
-        hideLoading(); // El loader se apaga aquí de forma centralizada y segura
-    }
-});
+            hideLoading();
+        });
 
     lucide.createIcons();
-
 }
 
 function toggleAuthMode() {
@@ -681,8 +698,13 @@ async function handleAuthAction(event) {
 
 
 async function handleGoogleLogin() {
-    // 1. Mostrar el telón de carga y ocultar el login al instante
-    showLoading();
+    const loader = document.getElementById('appLoadingOverlay');
+    if (loader) {
+        // Mostramos el loader inmediatamente al hacer clic
+        loader.classList.remove('opacity-0', 'pointer-events-none');
+    }
+    
+    // Ocultar la pantalla de login de inmediato por seguridad visual
     const authScreen = document.getElementById('authScreen');
     if (authScreen) {
         authScreen.classList.add('hidden');
@@ -690,8 +712,43 @@ async function handleGoogleLogin() {
 
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
-        // 2. Solo abrimos el popup. OnAuthStateChanged detectará el éxito automáticamente.
-        await firebase.auth().signInWithPopup(provider);
+        const result = await firebase.auth().signInWithPopup(provider);
+        const authUser = result.user;
+
+        currentUserEmail = authUser.uid;
+
+        // Cargar los datos existentes del usuario desde Firebase
+        const loadSuccess = await loadDataFromFirebase();
+
+        // Verificar si el usuario ya existe en Firestore
+        const userRef = db.collection('user').doc(authUser.uid);
+        const docSnap = await userRef.get();
+
+        // Si no existe en la base de datos (primer inicio de sesión), crearlo
+        if (!loadSuccess || !appData[currentUserEmail]) {
+            appData[currentUserEmail] = createNewUserObj(
+                authUser.displayName || "Usuario Google",
+                authUser.email || ""
+            );
+            await saveDataToFirebase(false);
+        }
+
+        createAutoBackup(`Inicio con Google (${CURRENT_APP_VERSION})`);
+
+        document.getElementById('authScreen')?.classList.add('hidden');
+        showAppLayout();
+
+        // Validar si ya configuró su nómina anteriormente
+        if (!appData[currentUserEmail].isPayrollConfigured) {
+            openSetupPayrollModal();
+        } else {
+            document.getElementById('setupPayrollModal')?.classList.add('hidden');
+        }
+
+        // Renderizado explícito de vistas
+        if (typeof renderCalendar === 'function') renderCalendar();
+        if (typeof updateSidebar === 'function') updateSidebar();
+        if (window.lucide) lucide.createIcons();
     }
     catch (err) {
         console.error("Error en Google Sign-In:", err);
@@ -699,13 +756,11 @@ async function handleGoogleLogin() {
         if (err.code === 'auth/popup-closed-by-user') {
             errorMsg = "Has cerrado la ventana de inicio de sesión.";
         }
-        // Si hay error, restauramos el login y quitamos el loader
         if (authScreen) authScreen.classList.remove('hidden');
-        hideLoading();
         openCustomAlertModal("Error de Acceso", errorMsg);
-    } 
-    // Nota: Ya no ponemos hideLoading() aquí en el finally si el usuario tuvo éxito, 
-    // porque dejamos que onAuthStateChanged se encargue de apagar el loader cuando termine de cargar los datos.
+    } finally {
+        hideLoading();
+    }
 }
 
 async function handlePasswordReset() {
