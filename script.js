@@ -692,14 +692,10 @@ async function handleAuthAction(event) {
 async function handleGoogleLogin() {
     const loader = document.getElementById('appLoadingOverlay');
     if (loader) {
-        // Mostramos el loader inmediatamente al hacer clic para cubrir el parpadeo
+        // Aseguramos que el loader se muestre sobre todo lo demás
         loader.classList.remove('opacity-0', 'pointer-events-none');
     }
-	// 2. Ocultar la pantalla de login de inmediato por seguridad visual
-    const authScreen = document.getElementById('authScreen');
-    if (authScreen) {
-        authScreen.classList.add('hidden');
-    }
+
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
         // 1. Abrir ventana emergente de Google
@@ -715,7 +711,7 @@ async function handleGoogleLogin() {
         const userRef = db.collection('user').doc(authUser.uid);
         const docSnap = await userRef.get();
 
-        // 3. Si no existe en la base de datos (primer inicio de sesión), crearlo
+        // 4. Si no existe en la base de datos (primer inicio de sesión), crearlo
         if (!loadSuccess || !appData[currentUserEmail]) {
             appData[currentUserEmail] = createNewUserObj(
                 authUser.displayName || "Usuario Google",
@@ -726,17 +722,18 @@ async function handleGoogleLogin() {
 
         createAutoBackup(`Inicio con Google (${CURRENT_APP_VERSION})`);
 
+        // 5. Ocultar el login y mostrar la app
         document.getElementById('authScreen')?.classList.add('hidden');
         showAppLayout();
 
-        // Validar si ya configuró su nómina anteriormente
+        // Validar configuración de nómina
         if (!appData[currentUserEmail].isPayrollConfigured) {
             openSetupPayrollModal();
         } else {
             document.getElementById('setupPayrollModal')?.classList.add('hidden');
         }
 
-        // Renderizado explícito de vistas para garantizar que los elementos carguen sus datos
+        // Renderizado explícito de vistas
         if (typeof renderCalendar === 'function') renderCalendar();
         if (typeof updateSidebar === 'function') updateSidebar();
         if (window.lucide) lucide.createIcons();
@@ -749,10 +746,10 @@ async function handleGoogleLogin() {
         }
         openCustomAlertModal("Error de Acceso", errorMsg);
     } finally {
-	hideLoading();
+        // 6. Ocultar el loader solo al final de todo el proceso
+        hideLoading();
     }
 }
-
 async function handlePasswordReset() {
     const emailInput = document.getElementById('authEmail');
     const email = emailInput ? emailInput.value.trim() : '';
