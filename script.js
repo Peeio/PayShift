@@ -415,9 +415,6 @@ function hideLoading() {
 }
 
 function init() {
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('appLayout').classList.remove('hidden');
-
     if (!isPayrollVisible) {
         const payroll = document.getElementById('payrollPanel');
         const icon = document.getElementById('iconTogglePayroll');
