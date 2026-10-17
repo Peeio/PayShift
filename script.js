@@ -482,6 +482,9 @@ function init() {
                         document.getElementById('setupPayrollModal')?.classList.add('hidden');
                     }
 
+		    calculatePayroll();
+		    renderCalendar();
+
                 } else {
                     // Solo si Firebase confirma que NO hay sesión, mostramos el Login
                     document.getElementById('appLayout').classList.add('hidden');
@@ -991,23 +994,33 @@ function getUser() {
     if (!appData[currentUserEmail]) {
         appData[currentUserEmail] = createNewUserObj('Usuario', currentUserEmail.includes('@') ? currentUserEmail : '');
     }
-    if (!appData[currentUserEmail].colors) {
-        appData[currentUserEmail].colors = JSON.parse(JSON.stringify(defaultColors));
+    
+    const u = appData[currentUserEmail];
+
+    if (!u.colors) {
+        u.colors = JSON.parse(JSON.stringify(defaultColors));
     } else {
-        if (!appData[currentUserEmail].colors.F) appData[currentUserEmail].colors.F = defaultColors.F;
-        if (!appData[currentUserEmail].colors.AC) appData[currentUserEmail].colors.AC = defaultColors.AC;
-        if (!appData[currentUserEmail].colors.V) appData[currentUserEmail].colors.V = defaultColors.V;
+        if (!u.colors.F) u.colors.F = defaultColors.F;
+        if (!u.colors.AC) u.colors.AC = defaultColors.AC;
+        if (!u.colors.V) u.colors.V = defaultColors.V;
     }
-    if (!appData[currentUserEmail].customImages) {
-        appData[currentUserEmail].customImages = {};
+    if (!u.customImages) {
+        u.customImages = {};
     }
-    if (!appData[currentUserEmail].config) {
-        appData[currentUserEmail].config = { baseSalary: 0, carencia: 0, funcion: 0, prorrataExtra: 0, nightRate: 0, irpf: 0, marchBonus: 0, complements: [] };
-    } else if (appData[currentUserEmail].config.marchBonus === undefined) {appData[currentUserEmail].config.marchBonus = 0;}
-    if (!appData[currentUserEmail].config.complements) {
-        appData[currentUserEmail].config.complements = [];
+    
+    // Configuración salarial
+    if (!u.config) {
+        u.config = { baseSalary: 0, carencia: 0, funcion: 0, prorrataExtra: 0, nightRate: 0, irpf: 0, marchBonus: 0, complements: [] };
+    } else {
+        if (u.config.marchBonus === undefined) {
+            u.config.marchBonus = 0;
+        }
+        if (!u.config.complements) {
+            u.config.complements = [];
+        }
     }
-    return appData[currentUserEmail];
+
+    return u;
 }
 
 // Función para guardar los datos del usuario actual en Firebase Firestore
@@ -1056,6 +1069,8 @@ async function loadDataFromFirebase() {
             }
 
             appData[currentUserEmail] = data.appData;
+
+	    getUser();
 
             if (data.backupsHistory) {
                 backupsHistory = data.backupsHistory;
@@ -2789,7 +2804,7 @@ async function saveSettings() {
                 u.colors[code] = { ...(defaultColors[code] || {}) };
             }
             u.colors[code].isSplit = isSplitValue;
-			if (!isSplitValue) {
+	    if (!isSplitValue) {
                 delete u.colors[code].isSplit;
                 delete u.colors[code].startTime2;
                 delete u.colors[code].endTime2;
