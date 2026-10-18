@@ -425,7 +425,7 @@ let versionClickCount = 0;
 let versionClickTimer = null;
 
 function setupVersionSecretTrigger() {
-    const versionElem = document.getElementById('appVersionText'); // Asegúrate que este sea el ID de tu texto de versión
+    const versionElem = document.getElementById('foot'); 
     if (!versionElem) return;
 
     versionElem.style.cursor = 'pointer';
