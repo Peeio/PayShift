@@ -420,6 +420,50 @@ function hideLoading() {
     }
 }
 
+// 1. Defines la función aparte
+let versionClickCount = 0;
+let versionClickTimer = null;
+
+function setupVersionSecretTrigger() {
+    const versionElem = document.getElementById('appVersionText'); // Asegúrate que este sea el ID de tu texto de versión
+    if (!versionElem) return;
+
+    versionElem.style.cursor = 'pointer';
+
+    versionElem.addEventListener('click', () => {
+        versionClickCount++;
+
+        clearTimeout(versionClickTimer);
+        versionClickTimer = setTimeout(() => {
+            versionClickCount = 0;
+        }, 1500);
+
+        if (versionClickCount === 5) {
+            versionClickCount = 0;
+            
+            const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
+            const newSetting = !currentSetting;
+            localStorage.setItem('app_persistent_session', newSetting);
+
+            const newPersistence = newSetting 
+                ? firebase.auth.Auth.Persistence.LOCAL 
+                : firebase.auth.Auth.Persistence.SESSION;
+
+            firebase.auth().setPersistence(newPersistence).then(() => {
+                const message = newSetting 
+                    ? "Persistencia Activada: Tu sesión permanecerá abierta en este dispositivo."
+                    : "Persistencia Desactivada: La sesión se cerrará al salir.";
+                
+                if (typeof openCustomAlertModal === 'function') {
+                    openCustomAlertModal("Modo Desarrollador", message);
+                } else {
+                    alert(message);
+                }
+            });
+        }
+    });
+}
+
 function init() {
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('appLayout').classList.remove('hidden');
@@ -441,8 +485,13 @@ function init() {
         yearElem.innerText = `© PayShift ${new Date().getFullYear()}`;
     }
 
+	const isPersistent = localStorage.getItem('app_persistent_session') === 'true';
+    const chosenPersistence = isPersistent 
+        ? firebase.auth.Auth.Persistence.LOCAL 
+        : firebase.auth.Auth.Persistence.SESSION;
+	
     // Configurar persistencia SESSION para recordar la sesión
-    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+    firebase.auth().setPersistence(chosenPersistence)
         .then(() => {
             firebase.auth().onAuthStateChanged(async (authUser) => {
                 if (isRegisteringProcess) return;
@@ -506,7 +555,7 @@ function init() {
             document.getElementById('authScreen').classList.remove('hidden');
             hideLoading();
         });
-
+	setupVersionSecretTrigger();
     lucide.createIcons();
 }
 
