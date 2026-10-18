@@ -424,7 +424,6 @@ function hideLoading() {
     }
 }
 
-// 1. Defines la función aparte
 let versionClickCount = 0;
 let versionClickTimer = null;
 
@@ -432,9 +431,11 @@ function setupVersionSecretTrigger() {
     const versionElem = document.getElementById('copyrightYearText'); 
     if (!versionElem) return;
 
-    versionElem.style.cursor = 'pointer';
+    if (typeof CURRENT_APP_VERSION !== 'undefined') {
+        versionElem.innerText = `© PayShift ${new Date().getFullYear()} - ${CURRENT_APP_VERSION}`;
+    }
 
-    versionElem.addEventListener('click', () => {
+    versionElem.addEventListener('pointerup', () => {
         versionClickCount++;
 
         clearTimeout(versionClickTimer);
