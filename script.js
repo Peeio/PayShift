@@ -128,7 +128,7 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 const CURRENT_APP_VERSION = "v1.4.4";
-const versionElem = document.getElementById('copyrightYearText');
+const versionElem = document.getElementById('version');
 if (versionElem) {
     versionElem.innerText = CURRENT_APP_VERSION;
 }
