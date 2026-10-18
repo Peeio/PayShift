@@ -128,6 +128,10 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 const CURRENT_APP_VERSION = "v1.4.4";
+const versionElem = document.getElementById('copyrightYearText');
+if (versionElem) {
+    versionElem.innerText = CURRENT_APP_VERSION;
+}
 const MAX_CUSTOM_SHIFTS = 12;
 const ADMIN_RESTORE_PASSWORD = "450855";
 let pendingRestoreIndex = null;
