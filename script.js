@@ -425,7 +425,7 @@ let versionClickCount = 0;
 let versionClickTimer = null;
 
 function setupVersionSecretTrigger() {
-    const versionElem = document.getElementById('(c)'); 
+    const versionElem = document.getElementById('(copyrightYearText)'); 
     if (!versionElem) return;
 
     versionElem.style.cursor = 'pointer';
