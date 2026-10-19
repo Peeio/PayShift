@@ -428,15 +428,30 @@ let versionClickCount = 0;
 let versionClickTimer = null;
 let lastClickTime = 0;
 
+let versionClickCount = 0;
+let versionClickTimer = null;
+let lastClickTime = 0;
+
 function egg() {
+	console.log('ok');
     const versionElem = document.getElementById('copyrightYearText'); 
-    if (!versionElem) return;
+    if (!versionElem) {
+        console.warn("No se encontró #copyrightYearText");
+        return;
+    }
 
     if (typeof CURRENT_APP_VERSION !== 'undefined') {
         versionElem.innerText = '© PayShift';
     }
-	
+    
+    // 1. Hace que iOS y Android reconozcan el span como un botón interactivo
+    versionElem.setAttribute('role', 'button');
     versionElem.style.touchAction = 'manipulation';
+    
+    // 2. Solo cambia el cursor en pantallas táctiles/móviles o si quieres mantenerlo. 
+    // En móviles el cursor no se ve, pero Safari necesita esto para habilitar el toque.
+    versionElem.style.cursor = 'pointer';
+
     versionElem.addEventListener('pointerup', (e) => {
         e.stopPropagation();
 
