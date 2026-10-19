@@ -427,16 +427,11 @@ function hideLoading() {
 let versionClickCount = 0;
 let versionClickTimer = null;
 
-function setupVersionSecretTrigger() {
+function Egg() {
     const versionElem = document.getElementById('copyrightYearText'); 
     if (!versionElem) {
         console.warn("No se encontró el elemento #copyrightYearText");
         return;
-    }
-
-    // Actualiza el texto con la versión si tienes la constante definida
-    if (typeof CURRENT_APP_VERSION !== 'undefined') {
-        versionElem.innerText = `© PayShift ${new Date().getFullYear()} - ${CURRENT_APP_VERSION}`;
     }
 
     // pointerup detecta tanto clics de PC como toques en móvil de forma limpia
@@ -568,7 +563,7 @@ function init() {
             document.getElementById('authScreen').classList.remove('hidden');
             hideLoading();
         });
-	setupVersionSecretTrigger();
+	Egg();
     lucide.createIcons();
 }
 
