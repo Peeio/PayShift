@@ -426,7 +426,7 @@ function hideLoading() {
 
 let pressTimer = null;
 
-function setupVersionSecretTrigger() {
+function egg() {
     const versionElem = document.getElementById('copyrightYearText'); 
 
     const startPress = () => {
