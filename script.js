@@ -1343,7 +1343,7 @@ function renderCalendar() {
     }
 
     const now = new Date();
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     for (let day = 1; day <= totalDays; day++) {
         const dayDate = new Date(year, month, day);
