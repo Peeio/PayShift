@@ -427,27 +427,24 @@ function hideLoading() {
 let versionClickCount = 0;
 let versionClickTimer = null;
 
-function Egg() {
-    const versionElem = document.getElementById('copyrightYearText'); 
-    if (!versionElem) {
-        console.warn("No se encontró el elemento #copyrightYearText");
-        return;
+function egg() {
+const versionElem = document.getElementById('copyrightYearText'); 
+    if (!versionElem) return;
+
+    if (typeof CURRENT_APP_VERSION !== 'undefined') {
+        versionElem.innerText = `© PayShift ${new Date().getFullYear()} - ${CURRENT_APP_VERSION}`;
     }
 
-    // pointerup detecta tanto clics de PC como toques en móvil de forma limpia
     versionElem.addEventListener('pointerup', () => {
         versionClickCount++;
-        console.log(`Toque registrado: ${versionClickCount}/5`);
 
         clearTimeout(versionClickTimer);
         versionClickTimer = setTimeout(() => {
             versionClickCount = 0;
-            console.log("Contador reiniciado por inactividad.");
         }, 1500);
 
         if (versionClickCount === 5) {
             versionClickCount = 0;
-            console.log("¡5 toques alcanzados!");
             
             const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
             const newSetting = !currentSetting;
@@ -563,7 +560,7 @@ function init() {
             document.getElementById('authScreen').classList.remove('hidden');
             hideLoading();
         });
-	Egg();
+	egg();
     lucide.createIcons();
 }
 
