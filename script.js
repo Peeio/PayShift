@@ -426,11 +426,16 @@ function hideLoading() {
 
 let pressTimer = null;
 
-function egg() {
+function Secret() {
     const versionElem = document.getElementById('copyrightYearText'); 
 
-    const startPress = () => {
-        // Iniciar temporizador de 2 segundos de presión continuada
+    // Evita que el móvil intente seleccionar el texto al mantener el dedo pulsado
+    versionElem.style.webkitUserSelect = 'none';
+    versionElem.style.userSelect = 'none';
+    versionElem.style.webkitTouchCallout = 'none'; // Desactiva el menú contextual de iOS
+
+    const startPress = (e) => {
+        // Evitamos comportamientos predeterminados del navegador móvil
         pressTimer = setTimeout(() => {
             const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
             const newSetting = !currentSetting;
@@ -451,19 +456,18 @@ function egg() {
                     alert(message);
                 }
             });
-        }, 3000); 
+        }, 3000);
     };
 
     const cancelPress = () => {
         clearTimeout(pressTimer);
     };
 
-    // Eventos táctiles (Móvil)
     versionElem.addEventListener('touchstart', startPress, { passive: true });
     versionElem.addEventListener('touchend', cancelPress);
-    versionElem.addEventListener('touchmove', cancelPress); // Si desliza el dedo, cancela
+    versionElem.addEventListener('touchcancel', cancelPress);
+    versionElem.addEventListener('touchmove', cancelPress);
 
-    // Eventos de ratón (Escritorio)
     versionElem.addEventListener('mousedown', startPress);
     versionElem.addEventListener('mouseup', cancelPress);
     versionElem.addEventListener('mouseleave', cancelPress);
@@ -560,7 +564,7 @@ function init() {
             document.getElementById('authScreen').classList.remove('hidden');
             hideLoading();
         });
-	egg();
+	Secret();
     lucide.createIcons();
 }
 
