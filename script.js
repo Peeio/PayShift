@@ -428,7 +428,7 @@ let versionClickCount = 0;
 let versionClickTimer = null;
 
 function egg() {
-const versionElem = document.getElementById('copyrightYearText'); 
+const versionElem = document.getElementById('sideUserMail'); 
     if (!versionElem) return;
 
     if (typeof CURRENT_APP_VERSION !== 'undefined') {
