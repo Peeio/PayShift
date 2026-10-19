@@ -424,23 +424,24 @@ function hideLoading() {
     }
 }
 
-let pressTimer = null;
+let clickCount = 0;
+let clickTimer = null;
 
 function Secret() {
-    const versionElem = document.getElementById('copyrightYearText'); 
+    const triggerElem = document.getElementById('secretEggTrigger'); 
+    if (!triggerElem) return;
 
-    // Evita que el móvil intente seleccionar el texto al mantener el dedo pulsado
-	versionElem.style.touchAction = 'none';
-    versionElem.style.webkitUserSelect = 'none';
-    versionElem.style.userSelect = 'none';
-    versionElem.style.webkitTouchCallout = 'none'; // Desactiva el menú contextual de iOS
+    triggerElem.addEventListener('click', () => {
+        clickCount++;
+        
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => {
+            clickCount = 0;
+        }, 1000); // Ventana de 1 segundo para hacer los toques
 
-    const startPress = (e) => {
-		if (e.cancelable) {
-            e.preventDefault();
-        }
-        // Evitamos comportamientos predeterminados del navegador móvil
-        pressTimer = setTimeout(() => {
+        if (clickCount === 3) { // 3 toques rápidos
+            clickCount = 0;
+            
             const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
             const newSetting = !currentSetting;
             localStorage.setItem('app_persistent_session', newSetting);
@@ -460,21 +461,8 @@ function Secret() {
                     alert(message);
                 }
             });
-        }, 3000);
-    };
-
-    const cancelPress = () => {
-        clearTimeout(pressTimer);
-    };
-
-	versionElem.addEventListener('touchstart', startPress, { passive: false });
-    versionElem.addEventListener('touchend', cancelPress, { passive: false });
-    versionElem.addEventListener('touchcancel', cancelPress, { passive: false });
-    versionElem.addEventListener('touchmove', cancelPress, { passive: false });
-
-    versionElem.addEventListener('mousedown', startPress);
-    versionElem.addEventListener('mouseup', cancelPress);
-    versionElem.addEventListener('mouseleave', cancelPress);
+        }
+    });
 }
 
 function init() {
