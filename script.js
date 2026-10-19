@@ -428,12 +428,7 @@ let versionClickCount = 0;
 let versionClickTimer = null;
 let lastClickTime = 0;
 
-let versionClickCount = 0;
-let versionClickTimer = null;
-let lastClickTime = 0;
-
 function egg() {
-	console.log('ok');
     const versionElem = document.getElementById('copyrightYearText'); 
     if (!versionElem) {
         console.warn("No se encontró #copyrightYearText");
