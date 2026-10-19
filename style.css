@@ -439,6 +439,11 @@ html:not(.dark) input[type="file"]::file-selector-button:hover {
     background-color: #f1f5f9;
 }
 
+.select-none {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 .shift-bg-container {
     transition: all 0.5s ease;
     background-size: cover;
