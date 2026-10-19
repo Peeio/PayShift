@@ -436,6 +436,9 @@ function Secret() {
     versionElem.style.webkitTouchCallout = 'none'; // Desactiva el menú contextual de iOS
 
     const startPress = (e) => {
+		if (e.cancelable) {
+            e.preventDefault();
+        }
         // Evitamos comportamientos predeterminados del navegador móvil
         pressTimer = setTimeout(() => {
             const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
@@ -464,10 +467,10 @@ function Secret() {
         clearTimeout(pressTimer);
     };
 
-    versionElem.addEventListener('touchstart', startPress);
-    versionElem.addEventListener('touchend', cancelPress);
-    versionElem.addEventListener('touchcancel', cancelPress);
-    versionElem.addEventListener('touchmove', cancelPress);
+	versionElem.addEventListener('touchstart', startPress, { passive: false });
+    versionElem.addEventListener('touchend', cancelPress, { passive: false });
+    versionElem.addEventListener('touchcancel', cancelPress, { passive: false });
+    versionElem.addEventListener('touchmove', cancelPress, { passive: false });
 
     versionElem.addEventListener('mousedown', startPress);
     versionElem.addEventListener('mouseup', cancelPress);
