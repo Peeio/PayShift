@@ -424,49 +424,6 @@ function hideLoading() {
     }
 }
 
-let clickCount = 0;
-let clickTimer = null;
-
-function Secret() {
-    // Seleccionamos ambos IDs a la vez con un selector compuesto
-    const elements = document.querySelectorAll('#copyYearText, #copyrightYearText');
-
-    elements.forEach(elem => {
-        elem.addEventListener('click', () => {
-            clickCount++;
-            
-            clearTimeout(clickTimer);
-            clickTimer = setTimeout(() => {
-                clickCount = 0;
-            }, 1000); // 1 segundo para hacer los toques
-
-            if (clickCount === 3) { // 3 clics rápidos
-                clickCount = 0;
-                
-                const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
-                const newSetting = !currentSetting;
-                localStorage.setItem('app_persistent_session', newSetting);
-
-                const newPersistence = newSetting 
-                    ? firebase.auth.Auth.Persistence.LOCAL 
-                    : firebase.auth.Auth.Persistence.SESSION;
-
-                firebase.auth().setPersistence(newPersistence).then(() => {
-                    const message = newSetting 
-                        ? "Tu sesión permanecerá abierta en este dispositivo."
-                        : "La sesión se cerrará al salir.";
-                    
-                    if (typeof openCustomAlertModal === 'function') {
-                        openCustomAlertModal("Persistencia", message);
-                    } else {
-                        alert(message);
-                    }
-                });
-            }
-        });
-    });
-}
-
 function init() {
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('appLayout').classList.remove('hidden');
@@ -558,7 +515,6 @@ function init() {
             document.getElementById('authScreen').classList.remove('hidden');
             hideLoading();
         });
-	Secret();
     lucide.createIcons();
 }
 
@@ -612,10 +568,22 @@ async function sendVerificationEmail(user) {
     }
 }
 
-let isRegisteringProcess = false;
+async function applySelectedPersistence() {
+    const rememberCheckbox = document.getElementById('rememberDeviceCheckbox');
+    const isPersistent = rememberCheckbox ? rememberCheckbox.checked : false;
 
+    localStorage.setItem('app_persistent_session', isPersistent);
+
+    const chosenPersistence = isPersistent 
+        ? firebase.auth.Auth.Persistence.LOCAL 
+        : firebase.auth.Auth.Persistence.SESSION;
+
+    return firebase.auth().setPersistence(chosenPersistence);
+}
+
+let isRegisteringProcess = false;
 async function handleAuthAction(event) {
-    if (event && typeof event.preventDefault === 'function') event.preventDefault(); // Previene la recarga del navegador
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
 
     const emailField = document.getElementById('authEmail');
     const passwordField = document.getElementById('authPassword');
@@ -628,7 +596,6 @@ async function handleAuthAction(event) {
         return;
     }
 
-    // Validar formato de e-mail básico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailInput)) {
         openCustomAlertModal("Correo no válido", "Por favor, introduce una dirección de correo electrónico válida.");
@@ -641,14 +608,11 @@ async function handleAuthAction(event) {
 
             const email = emailInput.toLowerCase();
 
-            // 1. Registrar en Firebase Auth
             const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, passwordInput);
             const authUser = userCredential.user;
 
-            // 2. Enviar correo de verificación
             await authUser.sendEmailVerification();
 
-            // 3. Crear documento en Firestore bajo la colección /user/{userId}
             const userRef = db.collection('user').doc(authUser.uid);
             await userRef.set({
                 uid: authUser.uid,
@@ -656,10 +620,8 @@ async function handleAuthAction(event) {
                 createdAt: new Date().toISOString()
             });
 
-            // 4. Cerrar sesión inmediatamente para obligar a verificar antes de ingresar
             await firebase.auth().signOut();
 
-            // Resetear formulario e interfaz
             isRegisteringProcess = false;
             toggleAuthMode();
             resetPasswordRequirementsUI();
@@ -673,43 +635,38 @@ async function handleAuthAction(event) {
             // Modo Login
             const loginEmail = emailInput.toLowerCase();
 
-            // 1. Iniciar sesión en Firebase Auth
+            // 1. Aplicamos la persistencia elegida antes de autenticar
+            await applySelectedPersistence();
+
+            // 2. Iniciar sesión en Firebase Auth
             const userCredential = await firebase.auth().signInWithEmailAndPassword(loginEmail, passwordInput);
             const authUser = userCredential.user;
 
-            // 2. Validar si el correo está verificado
             if (!authUser.emailVerified) {
                 await firebase.auth().signOut();
                 openCustomAlertModal(
                     "Correo no verificado",
                     "Debes verificar tu correo electrónico antes de ingresar. Revisa tu bandeja de entrada o spam."
                 );
-                // reenviado
                 await authUser.sendEmailVerification();
                 return;
             }
 
-            // 3. Establecer identificador de usuario activo
             currentUserEmail = authUser.uid;
 
-            // 4. Cargar datos desde Firebase
             const loadSuccess = await loadDataFromFirebase();
 
-            // 5. Inicializar el objeto si no existe (con datos válidos)
             if (!loadSuccess || !appData[currentUserEmail]) {
                 const username = authUser.displayName || loginEmail.split('@')[0];
                 appData[currentUserEmail] = createNewUserObj(username, authUser.email);
             }
 
-            // 6. Guardar estado y continuar a la aplicación
             await saveDataToFirebase(false);
             createAutoBackup(`Inicio de sesión (${CURRENT_APP_VERSION})`);
 
-            // 7. Mostrar Layout principal siempre
             document.getElementById('authScreen').classList.add('hidden');
             showAppLayout();
 
-            // 8. Si la nómina no está configurada, abrir el modal por encima
             if (!appData[currentUserEmail].isPayrollConfigured) {
                 openSetupPayrollModal();
             }
@@ -742,9 +699,8 @@ async function handleAuthAction(event) {
 
         openCustomAlertModal("Error de Acceso", errorMsg);
 
-        // Limpieza de campos al capturar error usando las variables existentes
-        if (passwordInput) passwordInput.value = "";
-        if (emailInput) emailInput.value = "";
+        if (passwordField) passwordField.value = "";
+        if (emailField) emailField.value = "";
     }
 }
 
@@ -752,31 +708,30 @@ async function handleAuthAction(event) {
 async function handleGoogleLogin() {
     const loader = document.getElementById('appLoadingOverlay');
     if (loader) {
-        // Mostramos el loader inmediatamente al hacer clic
         loader.classList.remove('opacity-0', 'pointer-events-none');
     }
     
-    // Ocultar la pantalla de login de inmediato por seguridad visual
     const authScreen = document.getElementById('authScreen');
     if (authScreen) {
         authScreen.classList.add('hidden');
     }
 
-    const provider = new firebase.auth.GoogleAuthProvider();
     try {
+        // 1. Aplicamos la persistencia elegida por el usuario antes de iniciar sesión
+        await applySelectedPersistence();
+
+        // 2. Procedemos con el login con Google
+        const provider = new firebase.auth.GoogleAuthProvider();
         const result = await firebase.auth().signInWithPopup(provider);
         const authUser = result.user;
 
         currentUserEmail = authUser.uid;
 
-        // Cargar los datos existentes del usuario desde Firebase
         const loadSuccess = await loadDataFromFirebase();
 
-        // Verificar si el usuario ya existe en Firestore
         const userRef = db.collection('user').doc(authUser.uid);
         const docSnap = await userRef.get();
 
-        // Si no existe en la base de datos (primer inicio de sesión), crearlo
         if (!loadSuccess || !appData[currentUserEmail]) {
             appData[currentUserEmail] = createNewUserObj(
                 authUser.displayName || "Usuario Google",
@@ -790,14 +745,12 @@ async function handleGoogleLogin() {
         document.getElementById('authScreen')?.classList.add('hidden');
         showAppLayout();
 
-        // Validar si ya configuró su nómina anteriormente
         if (!appData[currentUserEmail].isPayrollConfigured) {
             openSetupPayrollModal();
         } else {
             document.getElementById('setupPayrollModal')?.classList.add('hidden');
         }
 
-        // Renderizado explícito de vistas
         if (typeof renderCalendar === 'function') renderCalendar();
         if (typeof updateSidebar === 'function') updateSidebar();
         if (window.lucide) lucide.createIcons();
