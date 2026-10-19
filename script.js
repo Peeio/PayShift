@@ -432,7 +432,7 @@ function setupVersionSecretTrigger() {
     if (!versionElem) return;
 
     if (typeof CURRENT_APP_VERSION !== 'undefined') {
-        versionElem.innerText = `© PayShift ${new Date().getFullYear()} - ${CURRENT_APP_VERSION}`;
+        versionElem.innerText = '© PayShift';
     }
 
     versionElem.addEventListener('pointerup', () => {
