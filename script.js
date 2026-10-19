@@ -426,17 +426,26 @@ function hideLoading() {
 
 let versionClickCount = 0;
 let versionClickTimer = null;
+let lastClickTime = 0;
 
 function egg() {
-const versionElem = document.getElementById('sideUserMail'); 
+    const versionElem = document.getElementById('copyrightYearText'); 
     if (!versionElem) return;
 
     if (typeof CURRENT_APP_VERSION !== 'undefined') {
         versionElem.innerText = '© PayShift';
     }
+	
+    versionElem.style.touchAction = 'manipulation';
+    versionElem.addEventListener('pointerup', (e) => {
+        e.stopPropagation();
 
-    versionElem.addEventListener('pointerup', () => {
+        const now = Date.now();
+        if (now - lastClickTime < 80) return;
+        lastClickTime = now;
+
         versionClickCount++;
+        console.log(`Toque/Clic registrado: ${versionClickCount}/5`);
 
         clearTimeout(versionClickTimer);
         versionClickTimer = setTimeout(() => {
