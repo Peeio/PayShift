@@ -424,47 +424,14 @@ function hideLoading() {
     }
 }
 
-let versionClickCount = 0;
-let versionClickTimer = null;
-let lastClickTime = 0;
+let pressTimer = null;
 
-function egg() {
+function setupVersionSecretTrigger() {
     const versionElem = document.getElementById('copyrightYearText'); 
-    if (!versionElem) {
-        console.warn("No se encontró #copyrightYearText");
-        return;
-    }
 
-    if (typeof CURRENT_APP_VERSION !== 'undefined') {
-        versionElem.innerText = '© PayShift';
-    }
-    
-    // 1. Hace que iOS y Android reconozcan el span como un botón interactivo
-    versionElem.setAttribute('role', 'button');
-    versionElem.style.touchAction = 'manipulation';
-    
-    // 2. Solo cambia el cursor en pantallas táctiles/móviles o si quieres mantenerlo. 
-    // En móviles el cursor no se ve, pero Safari necesita esto para habilitar el toque.
-    versionElem.style.cursor = 'pointer';
-
-    versionElem.addEventListener('pointerup', (e) => {
-        e.stopPropagation();
-
-        const now = Date.now();
-        if (now - lastClickTime < 80) return;
-        lastClickTime = now;
-
-        versionClickCount++;
-        console.log(`Toque/Clic registrado: ${versionClickCount}/5`);
-
-        clearTimeout(versionClickTimer);
-        versionClickTimer = setTimeout(() => {
-            versionClickCount = 0;
-        }, 1500);
-
-        if (versionClickCount === 5) {
-            versionClickCount = 0;
-            
+    const startPress = () => {
+        // Iniciar temporizador de 2 segundos de presión continuada
+        pressTimer = setTimeout(() => {
             const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
             const newSetting = !currentSetting;
             localStorage.setItem('app_persistent_session', newSetting);
@@ -475,17 +442,31 @@ function egg() {
 
             firebase.auth().setPersistence(newPersistence).then(() => {
                 const message = newSetting 
-                    ? "Persistencia Activada: Tu sesión permanecerá abierta en este dispositivo."
-                    : "Persistencia Desactivada: La sesión se cerrará al salir.";
+                    ? "Tu sesión permanecerá abierta en este dispositivo."
+                    : "La sesión se cerrará al salir.";
                 
                 if (typeof openCustomAlertModal === 'function') {
-                    openCustomAlertModal("Modo Desarrollador", message);
+                    openCustomAlertModal("Persistencia", message);
                 } else {
                     alert(message);
                 }
             });
-        }
-    });
+        }, 3000); 
+    };
+
+    const cancelPress = () => {
+        clearTimeout(pressTimer);
+    };
+
+    // Eventos táctiles (Móvil)
+    versionElem.addEventListener('touchstart', startPress, { passive: true });
+    versionElem.addEventListener('touchend', cancelPress);
+    versionElem.addEventListener('touchmove', cancelPress); // Si desliza el dedo, cancela
+
+    // Eventos de ratón (Escritorio)
+    versionElem.addEventListener('mousedown', startPress);
+    versionElem.addEventListener('mouseup', cancelPress);
+    versionElem.addEventListener('mouseleave', cancelPress);
 }
 
 function init() {
