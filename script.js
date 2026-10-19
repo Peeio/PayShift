@@ -428,40 +428,42 @@ let clickCount = 0;
 let clickTimer = null;
 
 function Secret() {
-    const triggerElem = document.getElementById('secretEggTrigger'); 
-    if (!triggerElem) return;
+    // Seleccionamos ambos IDs a la vez con un selector compuesto
+    const elements = document.querySelectorAll('#copyYearText, #copyrightYearText');
 
-    triggerElem.addEventListener('click', () => {
-        clickCount++;
-        
-        clearTimeout(clickTimer);
-        clickTimer = setTimeout(() => {
-            clickCount = 0;
-        }, 1000); // Ventana de 1 segundo para hacer los toques
-
-        if (clickCount === 3) { // 3 toques rápidos
-            clickCount = 0;
+    elements.forEach(elem => {
+        elem.addEventListener('click', () => {
+            clickCount++;
             
-            const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
-            const newSetting = !currentSetting;
-            localStorage.setItem('app_persistent_session', newSetting);
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 1000); // 1 segundo para hacer los toques
 
-            const newPersistence = newSetting 
-                ? firebase.auth.Auth.Persistence.LOCAL 
-                : firebase.auth.Auth.Persistence.SESSION;
-
-            firebase.auth().setPersistence(newPersistence).then(() => {
-                const message = newSetting 
-                    ? "Tu sesión permanecerá abierta en este dispositivo."
-                    : "La sesión se cerrará al salir.";
+            if (clickCount === 3) { // 3 clics rápidos
+                clickCount = 0;
                 
-                if (typeof openCustomAlertModal === 'function') {
-                    openCustomAlertModal("Persistencia", message);
-                } else {
-                    alert(message);
-                }
-            });
-        }
+                const currentSetting = localStorage.getItem('app_persistent_session') === 'true';
+                const newSetting = !currentSetting;
+                localStorage.setItem('app_persistent_session', newSetting);
+
+                const newPersistence = newSetting 
+                    ? firebase.auth.Auth.Persistence.LOCAL 
+                    : firebase.auth.Auth.Persistence.SESSION;
+
+                firebase.auth().setPersistence(newPersistence).then(() => {
+                    const message = newSetting 
+                        ? "Tu sesión permanecerá abierta en este dispositivo."
+                        : "La sesión se cerrará al salir.";
+                    
+                    if (typeof openCustomAlertModal === 'function') {
+                        openCustomAlertModal("Persistencia", message);
+                    } else {
+                        alert(message);
+                    }
+                });
+            }
+        });
     });
 }
 
