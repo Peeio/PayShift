@@ -430,6 +430,7 @@ function Secret() {
     const versionElem = document.getElementById('copyrightYearText'); 
 
     // Evita que el móvil intente seleccionar el texto al mantener el dedo pulsado
+	versionElem.style.touchAction = 'none';
     versionElem.style.webkitUserSelect = 'none';
     versionElem.style.userSelect = 'none';
     versionElem.style.webkitTouchCallout = 'none'; // Desactiva el menú contextual de iOS
@@ -463,7 +464,7 @@ function Secret() {
         clearTimeout(pressTimer);
     };
 
-    versionElem.addEventListener('touchstart', startPress, { passive: true });
+    versionElem.addEventListener('touchstart', startPress);
     versionElem.addEventListener('touchend', cancelPress);
     versionElem.addEventListener('touchcancel', cancelPress);
     versionElem.addEventListener('touchmove', cancelPress);
