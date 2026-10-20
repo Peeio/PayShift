@@ -1,4 +1,4 @@
-const CURRENT_APP_VERSION = "v1.4.8";
+const CURRENT_APP_VERSION = "v1.4.9";
 
 (() => {
     const toggle = document.getElementById('headerMenuToggle');
