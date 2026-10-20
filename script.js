@@ -127,7 +127,7 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-const CURRENT_APP_VERSION = "v1.4.5";
+const CURRENT_APP_VERSION = "v1.4.6";
 const versionElem = document.getElementById('version');
 if (versionElem) {
     versionElem.innerText = CURRENT_APP_VERSION;
@@ -1972,25 +1972,28 @@ function calculatePayroll() {
         const info = u.shifts[dateKey] || {};
         const shift = info.shift;
         const d = new Date(prevYear, prevMonth, day);
-	const calculatedType = getDayType(d); 
+		const calculatedType = getDayType(d); 
 
         // 2. Determinamos el tipo final: si el usuario lo especificó manualmente (y no es 'auto'), usamos ese; 
         // si no, usamos el calculado automáticamente.
         let finalDayType = (info.dayType && info.dayType !== 'auto') ? info.dayType : calculatedType;
 
         let dispoType = 'laborable';
-	let isFestiveOrWeekend = false;
+		let isFestiveOrWeekend = false;
 
         if (finalDayType === 'festivo') {
             dispoType = 'festivo';
-	    isFestiveOrWeekend = true;
+	    	isFestiveOrWeekend = true;
         } else if (finalDayType === 'festivo-especial') {
             dispoType = 'especial';
-	    isFestiveOrWeekend = true;
+	    	isFestiveOrWeekend = true;
         } else if (finalDayType === 'fin-semana') {
             dispoType = 'finde';
-	    isFestiveOrWeekend = true;
-        } else {
+	    	isFestiveOrWeekend = true;
+        } else if (finalDayType === 'laboral') {
+    		dispoType = 'laboral';
+    		isFestiveOrWeekend = false;
+		} else {
             // Si es null (día laborable normal sin festivo)
             const dayOfWeek = d.getDay();
             if (dayOfWeek === 0 || dayOfWeek === 6) {
@@ -2002,10 +2005,25 @@ function calculatePayroll() {
             }
         }
 
-        if (shift === 'N') if (isFestiveOrWeekend) {ngHours += 8;} else {nightHours += 8;}
-        else if (shift === 'NG') { ngHours += 8; guardDispoPay += GUARDIA_DISPO[dispoType]; guardInterventionDays++; }
-        else if (shift === 'MG') { mgHours += 8; guardDispoPay += GUARDIA_DISPO[dispoType]; guardInterventionDays++; }
-        else if (shift === 'G') { guardDispoPay += GUARDIA_DISPO[dispoType]; guardInterventionDays++; }
+		// El turno N siempre suma a nightHours, sin importar el tipo de día
+		if (shift === 'N') {
+		    nightHours += 8;
+		} 
+		// Para el resto de turnos de guardia, usamos la lógica de disponibilidad
+		else if (shift === 'NG') {
+		    ngHours += 8; 
+		    guardDispoPay += GUARDIA_DISPO[dispoType]; 
+		    guardInterventionDays++; 
+		}
+		else if (shift === 'MG') {
+		    mgHours += 8; 
+		    guardDispoPay += GUARDIA_DISPO[dispoType]; 
+		    guardInterventionDays++; 
+		}
+		else if (shift === 'G') {
+		    guardDispoPay += GUARDIA_DISPO[dispoType]; 
+		    guardInterventionDays++; 
+		}
     }
 
     // 2. Recorrer el MES ACTUAL para el resto de conceptos si fuera necesario (aunque en tu lógica actual el bucle principal calculaba todo, 
