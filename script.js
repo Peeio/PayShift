@@ -1,3 +1,5 @@
+const CURRENT_APP_VERSION = "v1.4.8";
+
 (() => {
     const toggle = document.getElementById('headerMenuToggle');
     const menu = document.getElementById('headerControls');
@@ -127,7 +129,6 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-const CURRENT_APP_VERSION = "v1.4.7";
 const versionElem = document.getElementById('version');
 if (versionElem) {
     versionElem.innerText = CURRENT_APP_VERSION;
