@@ -803,6 +803,15 @@ async function handlePasswordReset() {
 }
 
 window.addEventListener('keydown', (event) => {
+	// --- NAVEGACIÓN CON FLECHAS DE DIRECCIÓN ---
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+            event.preventDefault();
+            const direction = event.key === 'ArrowLeft' ? -1 : 1;
+            changeCurrentNavigation(direction);
+            return;
+        }
+    }
     // La alerta de confirmación se cierra tanto con Enter como con Escape.
     const customAlert = document.getElementById('customAlertModal');
     if (customAlert && !customAlert.classList.contains('hidden') &&
