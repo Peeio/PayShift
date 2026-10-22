@@ -1,4 +1,4 @@
-const CURRENT_APP_VERSION = "v1.4.9";
+const CURRENT_APP_VERSION = "v1.5.0";
 
 (() => {
     const toggle = document.getElementById('headerMenuToggle');
@@ -988,6 +988,8 @@ async function handleLogout() {
     clearTimeout(inactivityTimer); // Limpiar el timer
     try {
         if (!document.documentElement.classList.contains('dark')) toggleDarkMode();
+		if (document.getElementById('rememberDeviceCheckbox').checked) document.getElementById('rememberDeviceCheckbox').checked = false;
+		
         await firebase.auth().signOut();
         currentUserEmail = null;
 
@@ -1023,6 +1025,11 @@ function createNewUserObj(name, email) {
 }
 
 function getUser() {
+	if (!currentUserEmail) {
+        console.warn("getUser() llamado sin una sesión activa.");
+        return createNewUserObj('Invitado', '');
+    }
+	
     if (!appData[currentUserEmail]) {
         appData[currentUserEmail] = createNewUserObj('Usuario', currentUserEmail.includes('@') ? currentUserEmail : '');
     }
