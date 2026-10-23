@@ -1,4 +1,4 @@
-const CURRENT_APP_VERSION = "v1.7.0";
+const CURRENT_APP_VERSION = "v1.7.1";
 
 (() => {
     const toggle = document.getElementById('headerMenuToggle');
@@ -2023,9 +2023,13 @@ function calculatePayroll() {
             }
         }
 
-        // El turno N siempre suma a nightHours, sin importar el tipo de día
+		// El turno N: si es festivo o fin de semana va a ngHours; si es laborable normal, a nightHours
         if (shift === 'N') {
-            nightHours += 8;
+            if (isFestiveOrWeekend) {
+                ngHours += 8;
+            } else {
+                nightHours += 8;
+            }
         } 
         // Para el resto de turnos de guardia, usamos la lógica de disponibilidad y guardamos la fecha
         else if (shift === 'NG') {
