@@ -1,4 +1,4 @@
-const CURRENT_APP_VERSION = "v1.6.0";
+const CURRENT_APP_VERSION = "v1.7.0";
 
 (() => {
     const toggle = document.getElementById('headerMenuToggle');
@@ -368,7 +368,7 @@ function getOrderedShiftCodes(availableColors) {
 const HORA_EXTRA_MG = 9.069115;
 const HORA_EXTRA_NG = 13.603673;
 const GUARDIA_DISPO = { laborable: 19.67, finde: 39.32, festivo: 78.64, especial: 131.07 };
-const GUARDIA_INTERVENCION = { 1: 52.35, 2: 104.71, 3: 157.06, 4: 209.41, 5: 261.77, 6: 314.12 };
+const GUARDIA_INTERVENCION = { 1: 52.35, 2: 104.71, 3: 157.06, 4: 209.41, 5: 261.77, 6: 314.12, 7: 349.02};
 
 isPayrollVisible = window.innerWidth >= 1024;
 
@@ -1980,8 +1980,9 @@ function calculatePayroll() {
 
     const totalDays = new Date(year, month + 1, 0).getDate();
 
-    let nightHours = 0, mgHours = 0, ngHours = 0;
-    let guardDispoPay = 0, guardInterventionDays = 0;
+	let nightHours = 0, mgHours = 0, ngHours = 0;
+    let guardDispoPay = 0;
+    let guardDates = []; // Array para almacenar los días con guardia
 
     // 1. Recorrer el MES ANTERIOR exclusivamente para Guardias y Nocturnidad (A mes vencido)
     for (let day = 1; day <= prevMonthTotalDays; day++) {
@@ -1989,28 +1990,28 @@ function calculatePayroll() {
         const info = u.shifts[dateKey] || {};
         const shift = info.shift;
         const d = new Date(prevYear, prevMonth, day);
-		const calculatedType = getDayType(d); 
+        const calculatedType = getDayType(d); 
 
-        // 2. Determinamos el tipo final: si el usuario lo especificó manualmente (y no es 'auto'), usamos ese; 
+        // 2. Determinamos el tipo final: si el usuario lo especificó manualmente (y non es 'auto'), usamos ese; 
         // si no, usamos el calculado automáticamente.
         let finalDayType = (info.dayType && info.dayType !== 'auto') ? info.dayType : calculatedType;
 
         let dispoType = 'laborable';
-		let isFestiveOrWeekend = false;
+        let isFestiveOrWeekend = false;
 
         if (finalDayType === 'festivo') {
             dispoType = 'festivo';
-	    	isFestiveOrWeekend = true;
+            isFestiveOrWeekend = true;
         } else if (finalDayType === 'festivo-especial') {
             dispoType = 'especial';
-	    	isFestiveOrWeekend = true;
+            isFestiveOrWeekend = true;
         } else if (finalDayType === 'fin-semana') {
             dispoType = 'finde';
-	    	isFestiveOrWeekend = true;
+            isFestiveOrWeekend = true;
         } else if (finalDayType === 'laboral') {
-    		dispoType = 'laboral';
-    		isFestiveOrWeekend = false;
-		} else {
+            dispoType = 'laboral';
+            isFestiveOrWeekend = false;
+        } else {
             // Si es null (día laborable normal sin festivo)
             const dayOfWeek = d.getDay();
             if (dayOfWeek === 0 || dayOfWeek === 6) {
@@ -2018,36 +2019,58 @@ function calculatePayroll() {
                 isFestiveOrWeekend = true;
             } else {
                 dispoType = 'laborable';
-		isFestiveOrWeekend = false;
+                isFestiveOrWeekend = false;
             }
         }
 
-		// El turno N siempre suma a nightHours, sin importar el tipo de día
-		if (shift === 'N') {
-		    nightHours += 8;
-		} 
-		// Para el resto de turnos de guardia, usamos la lógica de disponibilidad
-		else if (shift === 'NG') {
-		    ngHours += 8; 
-		    guardDispoPay += GUARDIA_DISPO[dispoType]; 
-		    guardInterventionDays++; 
-		}
-		else if (shift === 'MG') {
-		    mgHours += 8; 
-		    guardDispoPay += GUARDIA_DISPO[dispoType]; 
-		    guardInterventionDays++; 
-		}
-		else if (shift === 'G') {
-		    guardDispoPay += GUARDIA_DISPO[dispoType]; 
-		    guardInterventionDays++; 
-		}
+        // El turno N siempre suma a nightHours, sin importar el tipo de día
+        if (shift === 'N') {
+            nightHours += 8;
+        } 
+        // Para el resto de turnos de guardia, usamos la lógica de disponibilidad y guardamos la fecha
+        else if (shift === 'NG') {
+            ngHours += 8; 
+            guardDispoPay += GUARDIA_DISPO[dispoType]; 
+            guardDates.push(dateKey);
+        }
+        else if (shift === 'MG') {
+            mgHours += 8; 
+            guardDispoPay += GUARDIA_DISPO[dispoType]; 
+            guardDates.push(dateKey);
+        }
+        else if (shift === 'G') {
+            guardDispoPay += GUARDIA_DISPO[dispoType]; 
+            guardDates.push(dateKey);
+        }
     }
 
-    // 2. Recorrer el MES ACTUAL para el resto de conceptos si fuera necesario (aunque en tu lógica actual el bucle principal calculaba todo, 
-    // ahora separamos las guardias/noches al mes anterior y el resto sigue en el mes en curso o base fija).
-    // Nota: Como las horas extra de MG/NG van ligadas a las guardias de los turnos de guardia, también se benefician del mes vencido al venir de los turnos NG y MG.
+    // 2. Calcular la intervención evaluando bloques consecutivos con la constante
+    let guardInterventionPay = 0;
+    if (guardDates.length > 0) {
+        let blocks = [];
+        let currentBlock = [guardDates[0]];
 
-    let guardInterventionPay = GUARDIA_INTERVENCION[guardInterventionDays] || (guardInterventionDays * 52.35);
+        for (let i = 1; i < guardDates.length; i++) {
+            const prevDate = new Date(guardDates[i - 1]);
+            const currDate = new Date(guardDates[i]);
+            const diffDays = Math.round((currDate - prevDate) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                currentBlock.push(guardDates[i]);
+            } else {
+                blocks.push(currentBlock);
+                currentBlock = [guardDates[i]];
+            }
+        }
+        blocks.push(currentBlock);
+
+        // Sumar el pago consultando la constante GUARDIA_INTERVENCION según los días de cada bloque
+        blocks.forEach(block => {
+            const len = block.length;
+            guardInterventionPay += GUARDIA_INTERVENCION[len] || (len * 52.35);
+        });
+    }
+
     let totalGuardPay = guardDispoPay + guardInterventionPay;
     let nightPay = nightHours * (cfg.nightRate || 0);
     let extraMgPay = mgHours * HORA_EXTRA_MG;
