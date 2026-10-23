@@ -1,4 +1,4 @@
-const CURRENT_APP_VERSION = "v1.5.0";
+const CURRENT_APP_VERSION = "v1.6.0";
 
 (() => {
     const toggle = document.getElementById('headerMenuToggle');
@@ -1076,14 +1076,14 @@ async function saveDataToFirebase(showAlert = true, updatedUser = null) {
         }
         const userData = appData[activeId] || {};
 
-        await userRef.update({
+		await userRef.set({
             appData: userData,
             backupsHistory: backupsHistory || [],
             shiftFullNames: shiftFullNames || {},
             shiftHours: typeof shiftHours !== 'undefined' ? shiftHours : {},
             shiftSplit: typeof shiftSplit !== 'undefined' ? shiftSplit : {},
             updatedAt: new Date().toISOString()
-        });
+        }, { merge: true });
 
         if (showAlert) {
             console.trace("¿Quién llamó a saveDataToFirebase con showAlert = true?");
@@ -2900,6 +2900,16 @@ async function saveSettings() {
     u.config.irpf = parseFloat(document.getElementById('cfgIrpf').value) || 0;
     u.config.marchBonus = parseFloat(document.getElementById('cfgMarchBonus').value) || 0;
 
+	u.isPayrollConfigured = [
+        u.config.baseSalary,
+        u.config.carencia,
+        u.config.funcion,
+        u.config.prorrataExtra,
+        u.config.nightRate,
+        u.config.irpf,
+        u.config.marchBonus
+    ].some(val => val > 0);
+	
     if (deletedAvatar) {
         u.avatar = null;
     } else if (tempAvatarData) {
