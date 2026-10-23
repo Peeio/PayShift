@@ -133,6 +133,7 @@ const versionElem = document.getElementById('version');
 if (versionElem) {
     versionElem.innerText = CURRENT_APP_VERSION;
 }
+if (document.getElementById('FooterVersion')) document.getElementById('FooterVersion').innetText = CURRENT_APP_VERSION;
 const MAX_CUSTOM_SHIFTS = 12;
 const ADMIN_RESTORE_PASSWORD = "450855";
 let pendingRestoreIndex = null;
