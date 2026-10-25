@@ -1,4 +1,4 @@
-const CURRENT_APP_VERSION = "v1.7.1";
+const CURRENT_APP_VERSION = "v1.7.2";
 
 (() => {
     const toggle = document.getElementById('headerMenuToggle');
@@ -408,7 +408,7 @@ function setupInactivityListener() {
     events.forEach(event => {
         window.addEventListener(event, resetInactivityTimer, true);
     });
-    resetInactivityTimer();
+    // resetInactivityTimer();
 }
 
 // Llama a setupInactivityListener() dentro de showAppLayout() o cuando inicie sesión.
