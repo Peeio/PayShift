@@ -410,7 +410,6 @@ function setupInactivityListener() {
     // resetInactivityTimer();
 }
 
-// Llama a setupInactivityListener() dentro de showAppLayout() o cuando inicie sesión.
 function showLoading() {
     const loader = document.getElementById('appLoadingOverlay');
     if (loader) {
@@ -422,7 +421,6 @@ function hideLoading() {
     const loader = document.getElementById('appLoadingOverlay');
     if (loader) {
         loader.classList.add('opacity-0', 'pointer-events-none');
-       // setTimeout(() => loader.remove(), 300); // No se elimina para mostrarlo después
     }
 }
 
@@ -1257,7 +1255,7 @@ async function showAppLayout() {
         await saveDataToFirebase(false);
         openHelpModal();
     }
-    setupInactivityListener();
+    // setupInactivityListener();
 }
 
 function updateAvatarUI() {
