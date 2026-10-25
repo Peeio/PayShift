@@ -377,28 +377,28 @@ isPayrollVisible = window.innerWidth >= 1024;
 let inactivityTimer;
 // Función para reiniciar el contador de inactividad
 function resetInactivityTimer() {
-    // clearTimeout(inactivityTimer);
+    clearTimeout(inactivityTimer);
 
-    // // Tiempo límite: 15 minutos (15 * 60 * 1000 ms)
-    // const timeoutMinutes = 15 * 60 * 1000;
+    // Tiempo límite: 15 minutos (15 * 60 * 1000 ms)
+    const timeoutMinutes = 15 * 60 * 1000;
 
-    // inactivityTimer = setTimeout(() => {
-    //     // Solo cerrar sesión si hay un usuario activo
-    //     if (currentUserEmail) {
-    //         const Ayuda = document.getElementById('helpModal');
-    //         const Ajustes = document.getElementById('settingsModal');
-    //         const Admin = document.getElementById('adminAuthModal');
-    //         const Turnos = document.getElementById('customShiftModal');
+    inactivityTimer = setTimeout(() => {
+        // Solo cerrar sesión si hay un usuario activo
+        if (currentUserEmail) {
+           const Ayuda = document.getElementById('helpModal');
+           const Ajustes = document.getElementById('settingsModal');
+           const Admin = document.getElementById('adminAuthModal');
+           const Turnos = document.getElementById('customShiftModal');
 
-    //         if (!document.documentElement.classList.contains('dark')) toggleDarkMode(); // Si está en modo claro
-    //         if (!Ayuda.classList.contains('hidden')) Ayuda.classList.add('hidden'); // Cerrar panel ayuda
-    //         if (!Ajustes.classList.contains('hidden')) Ajustes.classList.add('hidden'); // Cerrar panel ajustes
-    //         if (!Admin.classList.contains('hidden')) Admin.classList.add('hidden'); // Cerrar panel admin
-    //         if (!Turnos.classList.contains('hidden')) Turnos.classList.add('hidden'); // Cerrar panel turnos
-    //         handleLogout(); // Cerrar sesión
-    //         openCustomAlertModal("Sesión Expirada", "Has sido desconectado por inactividad.");
-    //     }
-    // }, timeoutMinutes);
+           if (!document.documentElement.classList.contains('dark')) toggleDarkMode(); // Si está en modo claro
+           if (!Ayuda.classList.contains('hidden')) Ayuda.classList.add('hidden'); // Cerrar panel ayuda
+           if (!Ajustes.classList.contains('hidden')) Ajustes.classList.add('hidden'); // Cerrar panel ajustes
+           if (!Admin.classList.contains('hidden')) Admin.classList.add('hidden'); // Cerrar panel admin
+           if (!Turnos.classList.contains('hidden')) Turnos.classList.add('hidden'); // Cerrar panel turnos
+           handleLogout(); // Cerrar sesión
+	       openCustomAlertModal("Sesión Expirada", "Has sido desconectado por inactividad.");
+       }
+    }, timeoutMinutes);
 }
 
 // Iniciar los escuchadores de interacción del usuario
@@ -407,7 +407,7 @@ function setupInactivityListener() {
     events.forEach(event => {
         window.addEventListener(event, resetInactivityTimer, true);
     });
-    // resetInactivityTimer();
+    resetInactivityTimer();
 }
 
 function showLoading() {
