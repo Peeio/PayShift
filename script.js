@@ -1,4 +1,4 @@
-const CURRENT_APP_VERSION = "v1.7.2";
+const CURRENT_APP_VERSION = "v1.8.2";
 
 (() => {
     const toggle = document.getElementById('headerMenuToggle');
@@ -661,7 +661,6 @@ async function handleAuthAction(event) {
                 appData[currentUserEmail] = createNewUserObj(username, authUser.email);
             }
 
-            await saveDataToFirebase(false);
             createAutoBackup(`Inicio de sesión (${CURRENT_APP_VERSION})`);
 
             document.getElementById('authScreen').classList.add('hidden');
@@ -1109,12 +1108,11 @@ async function loadDataFromFirebase() {
             const data = docSnap.data();
 
             if (!data.appData) {
-                return false;
+                return true; // Documento existe aunque esté vacío
             }
 
-            appData[activeId] = data.appData;
+        appData[activeId] = data.appData;
 	    currentUserEmail = activeId;
-
 	    getUser();
 
             if (data.backupsHistory) {
@@ -1133,11 +1131,13 @@ async function loadDataFromFirebase() {
             return true;
         }
 
-        return false;
+        return false; // Documento no existe
 
     } catch (error) {
         console.error("Error al cargar desde Firebase:", error);
-        return false;
+		// IMPORTANTE: Si hay un error de red, devolvemos 'true' o detenemos la ejecución 
+        // para impedir que la app crea que no hay datos y los sobrescriba borrándolos.
+        return true;
     }
 }
 
